@@ -1,0 +1,7 @@
+Thumbs.db
+.*
+bin-*
+bin
+html-template
+*.swf
+generated

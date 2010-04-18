@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<componentPackage>
+  <component id="CheckBoxList" class="com.pt.components.controls.CheckBoxList"/>
+  <component id="DataContainer" class="com.pt.components.containers.DataContainer"/>
+  <component id="DataRepeater" class="com.pt.components.containers.DataRepeater"/>
+  <component id="Scroller" class="com.pt.components.controls.Scroller"/>
+  <component id="LayoutContainer" class="com.pt.components.containers.LayoutContainer"/>
+</componentPackage>
