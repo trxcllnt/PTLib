@@ -482,7 +482,8 @@ package com.pt.components.controls
     
     protected function removeMask():void
     {
-      clipMask.graphics.clear();
+      if(clipMask)
+        clipMask.graphics.clear();
       target.mask = null;
     }
     
