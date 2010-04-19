@@ -1,9 +1,10 @@
 package com.pt.components.containers.data
 {
   import flash.utils.Dictionary;
+  import flash.utils.getTimer;
   
   import mx.utils.UIDUtil;
-
+  
   public class RepeaterData
   {
     public function RepeaterData()
@@ -22,7 +23,7 @@ package com.pt.components.containers.data
     public function addItem(item:Object, length:int = 1):Object
     {
       var uid:String = UIDUtil.createUID();
-      descriptors.appendChild(<item index={items.length()} position={size} length={length} id={uid} />);
+      descriptors.appendChild(<item index={items.length()} position={size} length={length} id={uid}/>);
       
       descriptors.@size = size + length;
       
@@ -62,7 +63,7 @@ package com.pt.components.containers.data
       return items.(attribute("id") == map[item]).attribute("position");
     }
     
-    public function getItemsBetweenPositions(beginPosition:int, endPosition:int, getExtra:int = 1):Array
+    public function getItemsBetweenPositions(beginPosition:int, endPosition:int, extraIndicies:int = 1):Array
     {
       if(beginPosition < 0)
         beginPosition = 0;
@@ -71,21 +72,28 @@ package com.pt.components.containers.data
         endPosition = size;
       
       if(items.length() == 0)
-        return [];
+        return[];
       
+      // This is more efficient on large data sets at earlier indicies than a fancy e4x query.
       var a:Array = [];
-      var list:XMLList = items.(beginPosition < (int(@position) + int(@length)) && endPosition >= (int(@position) + int(@length)));
-      for each(var child:XML in list)
+      var pos:int = 0;
+      var len:int = 0;
+      var idx:int = 0;
+      for each(var child:XML in items)
       {
-        a.push(map[String(child.@id)]);
-      }
-      var lastIndex:int = int(list[list.length() - 1].@index);
-      for(var i:int = 1; i <= getExtra; i++)
-      {
-        if(lastIndex + i >= length)
-          break;
+        pos = int(child.@position);
+        len = int(child.@length);
+        idx = int(child.@index);
         
-        a.push(getItemAtIndex(lastIndex + i));
+        if(beginPosition < (pos + len) && endPosition >= (pos + len))
+          a.push(map[String(child.@id)]);
+        else if((pos + len) > endPosition)
+        {
+          if(extraIndicies-- > 0)
+            a.push(map[String(child.@id)]);
+          else
+            break;
+        }
       }
       
       return a;
