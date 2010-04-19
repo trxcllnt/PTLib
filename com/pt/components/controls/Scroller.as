@@ -484,7 +484,8 @@ package com.pt.components.controls
     {
       if(clipMask)
         clipMask.graphics.clear();
-      target.mask = null;
+      if(target)
+        target.mask = null;
     }
     
     protected function horizontalScrollHandler(event:ScrollEvent):void
