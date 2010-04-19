@@ -160,8 +160,15 @@ package com.pt.components.containers
       }
     }
     
+    private var _nextRendererScrollDelta:int = 0;
+    private var _previousRendererScrollPosition:int = 0;
+    
     protected function updateRenderers():void
     {
+      var scrollDelta:int = verticalScrollPosition - _previousRendererScrollPosition;
+      if(scrollDelta > 0 && scrollDelta < _nextRendererScrollDelta)
+        return;
+      
       var items:Array = repeaterData.getItemsBetweenPositions(verticalScrollPosition, verticalScrollPosition + unscaledHeight, prequeueLength);
       
       if(!items || items.length <= 0)
@@ -216,6 +223,10 @@ package com.pt.components.containers
         {
           var pos:int = repeaterData.getItemPosition(renderer.data);
           var len:int = repeaterData.getItemLength(renderer.data);
+          
+          _nextRendererScrollDelta = len;
+          _previousRendererScrollPosition = pos;
+          
           rendererOffset = (verticalScrollPosition - pos) % len || 0;
         }
         
