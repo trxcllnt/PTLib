@@ -182,7 +182,7 @@ package com.pt.components.controls
       if(value === _horizontalScrollPosition)
         return;
       
-      _horizontalScrollPosition = value;
+      _horizontalScrollPosition = Math.min(value, Math.max(Math.round(target[targetWProp] - width), 0));
       invalidateDisplayList();
     }
     
@@ -198,7 +198,7 @@ package com.pt.components.controls
       if(value === _verticalScrollPosition)
         return;
       
-      _verticalScrollPosition = value;
+      _verticalScrollPosition = Math.min(value, Math.max(Math.round(target[targetHProp] - height), 0));
       invalidateDisplayList();
     }
     
@@ -296,14 +296,14 @@ package com.pt.components.controls
       if(isVirtual)
       {
         if(targetHScrollProp in target)
-          target[targetHScrollProp] = horizontalScrollPosition;
+          target[targetHScrollProp] = Math.min(horizontalScrollPosition, target[targetWProp]);
         if(targetVScrollProp in target)
-          target[targetVScrollProp] = verticalScrollPosition;
+          target[targetVScrollProp] = Math.min(verticalScrollPosition, target[targetHProp]);
       }
       else
       {
-        xx += horizontalScrollPosition;
-        yy += verticalScrollPosition;
+        xx += Math.min(horizontalScrollPosition, target[targetWProp]);
+        yy += Math.min(verticalScrollPosition, target[targetHProp]);
       }
       
       if(target is IFlexDisplayObject)
