@@ -182,7 +182,11 @@ package com.pt.components.controls
       if(value === _horizontalScrollPosition)
         return;
       
-      _horizontalScrollPosition = Math.min(value, Math.max(Math.round(target[targetWProp] - width), 0));
+      _horizontalScrollPosition = Math.min(value, Math.max(Math.round(targetWidth - width), 0));
+      
+      if(isVirtual)
+        target[targetHScrollProp] = _horizontalScrollPosition;
+      
       invalidateDisplayList();
     }
     
@@ -198,7 +202,11 @@ package com.pt.components.controls
       if(value === _verticalScrollPosition)
         return;
       
-      _verticalScrollPosition = Math.min(value, Math.max(Math.round(target[targetHProp] - height), 0));
+      _verticalScrollPosition = Math.min(value, Math.max(Math.round(targetHeight - height), 0));
+      
+      if(isVirtual)
+        target[targetVScrollProp] = _verticalScrollPosition;
+      
       invalidateDisplayList();
     }
     
@@ -244,7 +252,7 @@ package com.pt.components.controls
       {
         sizeTarget(target);
         
-        var barCreated:Boolean = configureHorizontalScrollBar(w, h, target[targetWProp]) || configureVerticalScrollBar(h, w, target[targetHProp]);
+        var barCreated:Boolean = configureHorizontalScrollBar(w, h, targetWidth) || configureVerticalScrollBar(h, w, targetHeight);
         
         positionTarget(target);
         
@@ -293,17 +301,10 @@ package com.pt.components.controls
         yy -= hasHorizontal && hasTop && !hasBottom ? 16 : 0;
       }
       
-      if(isVirtual)
+      if(!isVirtual)
       {
-        if(targetHScrollProp in target)
-          target[targetHScrollProp] = Math.min(horizontalScrollPosition, target[targetWProp]);
-        if(targetVScrollProp in target)
-          target[targetVScrollProp] = Math.min(verticalScrollPosition, target[targetHProp]);
-      }
-      else
-      {
-        xx += Math.min(horizontalScrollPosition, target[targetWProp]);
-        yy += Math.min(verticalScrollPosition, target[targetHProp]);
+        xx += Math.min(horizontalScrollPosition, targetWidth);
+        yy += Math.min(verticalScrollPosition, targetHeight);
       }
       
       if(target is IFlexDisplayObject)
@@ -505,12 +506,28 @@ package com.pt.components.controls
     
     protected function get hasVertical():Boolean
     {
-      return target && targetHProp in target && unscaledHeight < target[targetHProp];
+      return target && targetHProp in target && unscaledHeight < targetHeight;
     }
     
     protected function get hasHorizontal():Boolean
     {
-      return target && targetWProp in target && unscaledWidth < target[targetWProp];
+      return target && targetWProp in target && unscaledWidth < targetWidth;
+    }
+    
+    protected function get targetWidth():Number
+    {
+      if(target[targetWProp] is Function)
+        return target[targetWProp]();
+      
+      return target[targetWProp];
+    }
+    
+    protected function get targetHeight():Number
+    {
+      if(target[targetHProp] is Function)
+        return target[targetHProp]();
+      
+      return target[targetHProp];
     }
     
     protected function get hasLeft():Boolean
