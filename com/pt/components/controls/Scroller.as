@@ -3,6 +3,8 @@ package com.pt.components.controls
   import flash.display.DisplayObject;
   import flash.display.Graphics;
   import flash.display.Sprite;
+  import flash.events.Event;
+  import flash.events.MouseEvent;
   
   import mx.controls.HScrollBar;
   import mx.controls.VScrollBar;
@@ -18,9 +20,13 @@ package com.pt.components.controls
     public static const SCROLL_TYPE_MANUAL:String = "manual";
     public static const SCROLL_TYPE_VIRTUAL:String = "virtual";
     
+    public var mouseWheelMultiplier:Number = 1;
+    
     public function Scroller()
     {
       super();
+      
+      addEventListener(MouseEvent.MOUSE_WHEEL, scrollHandler);
     }
     
     private var _bars:String = "br";
@@ -89,6 +95,8 @@ package com.pt.components.controls
       
       if(!contains(target))
         addChildAt(target, 0);
+      
+      target.addEventListener(MouseEvent.MOUSE_WHEEL, scrollHandler, false, 0, true);
       
       invalidateDisplayList();
     }
@@ -182,7 +190,7 @@ package com.pt.components.controls
       if(value === _horizontalScrollPosition)
         return;
       
-      _horizontalScrollPosition = Math.min(value, Math.max(Math.round(targetWidth - width), 0));
+      _horizontalScrollPosition = Math.min(Math.max(value, 0), Math.max(Math.round(targetWidth - width), 0));
       
       if(isVirtual)
         target[targetHScrollProp] = _horizontalScrollPosition;
@@ -202,7 +210,7 @@ package com.pt.components.controls
       if(value === _verticalScrollPosition)
         return;
       
-      _verticalScrollPosition = Math.min(value, Math.max(Math.round(targetHeight - height), 0));
+      _verticalScrollPosition = Math.min(Math.max(value, 0), Math.max(Math.round(targetHeight - height), 0));
       
       if(isVirtual)
         target[targetVScrollProp] = _verticalScrollPosition;
@@ -497,6 +505,11 @@ package com.pt.components.controls
     protected function verticalScrollHandler(event:ScrollEvent):void
     {
       verticalScrollPosition = event.position;
+    }
+    
+    protected function scrollHandler(event:MouseEvent):void
+    {
+      verticalScrollPosition -= (event.delta * mouseWheelMultiplier);
     }
     
     protected function get isVirtual():Boolean
