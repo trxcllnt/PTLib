@@ -1,0 +1,9 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace controls "com.pt.components.controls.*";
+
+Scroller
+{
+  dragCursor: Embed(source="/assets/cursors.swf#Move");
+}

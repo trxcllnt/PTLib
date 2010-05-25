@@ -3,17 +3,20 @@ package com.pt.components.controls
   import flash.display.DisplayObject;
   import flash.display.Graphics;
   import flash.display.Sprite;
-  import flash.events.Event;
   import flash.events.MouseEvent;
+  import flash.geom.Point;
+  import flash.ui.Mouse;
   
-  import mx.controls.HScrollBar;
-  import mx.controls.VScrollBar;
   import mx.core.IFlexDisplayObject;
   import mx.core.IUIComponent;
   import mx.core.UIComponent;
   import mx.events.ScrollEvent;
   
   [DefaultProperty("target")]
+  
+  [Style(name="dragCursor", type="Class")]
+  [Style(name="horizontalAlign", type="String", enumeration="left,center,right")]
+  [Style(name="verticalAlign", type="String", enumeration="top,middle,bottom")]
   
   public class Scroller extends UIComponent
   {
@@ -95,6 +98,9 @@ package com.pt.components.controls
       
       if(!contains(target))
         addChildAt(target, 0);
+      
+      if(followCursor)
+        target.addEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler, false, 0, true);
       
       target.addEventListener(MouseEvent.MOUSE_WHEEL, scrollHandler, false, 0, true);
       
@@ -234,6 +240,23 @@ package com.pt.components.controls
       invalidateDisplayList();
     }
     
+    private var _followCursor:Boolean = false;
+    
+    public function get followCursor():Boolean
+    {
+      return _followCursor;
+    }
+    
+    public function set followCursor(value:Boolean):void
+    {
+      if(value === _followCursor)
+        return;
+      
+      _followCursor = value;
+      if(target)
+        target.addEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler, false, 0, true);
+    }
+    
     override protected function createChildren():void
     {
       super.createChildren();
@@ -303,6 +326,7 @@ package com.pt.components.controls
     {
       var xx:Number = 0;
       var yy:Number = 0;
+      
       if(inset)
       {
         xx -= hasVertical && hasLeft && !hasRight ? 16 : 0;
@@ -313,6 +337,34 @@ package com.pt.components.controls
       {
         xx += Math.min(horizontalScrollPosition, targetWidth);
         yy += Math.min(verticalScrollPosition, targetHeight);
+      }
+      
+      if(targetWidth < unscaledWidth)
+      {
+        var hAlign:String = getStyle('horizontalAlign') || 'left';
+        switch(hAlign)
+        {
+          case "center":
+            xx = (unscaledWidth - targetWidth) / 2 * -1;
+            break;
+          case "right":
+            xx = unscaledWidth - targetWidth * -1;
+            break;
+        }
+      }
+      
+      if(targetHeight < unscaledHeight)
+      {
+        var vAlign:String = getStyle('verticalAlign') || 'top';
+        switch(vAlign)
+        {
+          case 'middle':
+            yy = (unscaledHeight - targetHeight) / 2 * -1;
+            break;
+          case 'bottom':
+            yy = unscaledHeight - targetHeight * -1;
+            break;
+        }
       }
       
       if(target is IFlexDisplayObject)
@@ -399,7 +451,7 @@ package com.pt.components.controls
     protected function configureVerticalScrollBar(height:Number, width:Number, totalHeight:Number):Boolean
     {
       var barCreated:Boolean = false
-        
+      
       var barHeight:Number = height;
       if(inset)
       {
@@ -561,6 +613,72 @@ package com.pt.components.controls
     protected function get hasBottom():Boolean
     {
       return bars.indexOf("b") != -1;
+    }
+    
+    private var cursorChild:IFlexDisplayObject;
+    
+    protected function cursorDownHandler(event:MouseEvent):void
+    {
+      if(!target)
+        return;
+      
+//      var p:Point = globalToLocal(new Point(event.stageX, event.stageY));
+      var p:Point = new Point(event.stageX, event.stageY);
+      coords = p;
+      
+      if(cursorChild && stage.contains(cursorChild as DisplayObject))
+        stage.removeChild(cursorChild as DisplayObject);
+      
+      var cursor:Class = getStyle('dragCursor');
+      if(cursor)
+      {
+        Mouse.hide();
+        
+        cursorChild = IFlexDisplayObject(new cursor());
+        stage.addChild(cursorChild as DisplayObject);
+        cursorChild.move(p.x, p.y);
+      }
+      
+      target.removeEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler);
+      
+      stage.addEventListener(MouseEvent.MOUSE_MOVE, cursorMoveHandler, true);
+      stage.addEventListener(MouseEvent.MOUSE_UP, cursorUpHandler, true);
+    }
+    
+    private var coords:Point;
+    
+    protected function cursorMoveHandler(event:MouseEvent):void
+    {
+      if(!hasHorizontal && !hasVertical)
+        return;
+      
+//      var p:Point = globalToLocal(new Point(event.stageX, event.stageY));
+      var p:Point = new Point(event.stageX, event.stageY);
+      
+      if(cursorChild)
+        cursorChild.move(p.x, p.y);
+//        cursorChild.move(cursorChild.x + p.x, cursorChild.y + p.y);
+      
+      var delta:Point = p.subtract(coords);
+      horizontalScrollPosition -= delta.x;
+      verticalScrollPosition -= delta.y;
+      
+      coords = p;
+    }
+    
+    protected function cursorUpHandler(event:MouseEvent):void
+    {
+      Mouse.show();
+      
+      if(cursorChild && stage.contains(cursorChild as DisplayObject))
+        stage.removeChild(cursorChild as DisplayObject);
+      
+      cursorChild = null;
+      
+      stage.removeEventListener(MouseEvent.MOUSE_UP, cursorUpHandler, true);
+      stage.removeEventListener(MouseEvent.MOUSE_MOVE, cursorMoveHandler, true);
+      if(target)
+        target.addEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler, false, 0, true);
     }
   }
 }
