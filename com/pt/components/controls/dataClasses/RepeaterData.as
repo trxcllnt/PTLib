@@ -17,6 +17,7 @@ package com.pt.components.controls.dataClasses
     
     public function clear():void
     {
+      _size = 0;
       descriptors = [];
       itemMap = new Dictionary();
     }

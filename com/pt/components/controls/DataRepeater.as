@@ -140,6 +140,7 @@ package com.pt.components.controls
         // Only do this when the data or itemRenderer changes. This is an incredibly
         // intensive operation, so change the data/renderers as little as possible.
         measureAllDataItems();
+        updateRenderers();
       }
     }
     

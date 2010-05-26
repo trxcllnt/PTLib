@@ -3,6 +3,7 @@ package com.pt.components.controls
   import flash.display.DisplayObject;
   import flash.display.Graphics;
   import flash.display.Sprite;
+  import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.geom.Point;
   import flash.ui.Mouse;
@@ -622,7 +623,6 @@ package com.pt.components.controls
       if(!target)
         return;
       
-//      var p:Point = globalToLocal(new Point(event.stageX, event.stageY));
       var p:Point = new Point(event.stageX, event.stageY);
       coords = p;
       
@@ -642,6 +642,7 @@ package com.pt.components.controls
       target.removeEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler);
       
       stage.addEventListener(MouseEvent.MOUSE_MOVE, cursorMoveHandler, true);
+      stage.addEventListener(Event.MOUSE_LEAVE, cursorUpHandler, true);
       stage.addEventListener(MouseEvent.MOUSE_UP, cursorUpHandler, true);
     }
     
@@ -652,12 +653,10 @@ package com.pt.components.controls
       if(!hasHorizontal && !hasVertical)
         return;
       
-//      var p:Point = globalToLocal(new Point(event.stageX, event.stageY));
       var p:Point = new Point(event.stageX, event.stageY);
       
       if(cursorChild)
         cursorChild.move(p.x, p.y);
-//        cursorChild.move(cursorChild.x + p.x, cursorChild.y + p.y);
       
       var delta:Point = p.subtract(coords);
       horizontalScrollPosition -= delta.x;
@@ -666,7 +665,7 @@ package com.pt.components.controls
       coords = p;
     }
     
-    protected function cursorUpHandler(event:MouseEvent):void
+    protected function cursorUpHandler(event:Event):void
     {
       Mouse.show();
       
@@ -675,8 +674,10 @@ package com.pt.components.controls
       
       cursorChild = null;
       
+      stage.removeEventListener(Event.MOUSE_LEAVE, cursorUpHandler);
       stage.removeEventListener(MouseEvent.MOUSE_UP, cursorUpHandler, true);
       stage.removeEventListener(MouseEvent.MOUSE_MOVE, cursorMoveHandler, true);
+      
       if(target)
         target.addEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler, false, 0, true);
     }
