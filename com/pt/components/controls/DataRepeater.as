@@ -76,10 +76,10 @@ package com.pt.components.controls
       invalidateDisplayList();
     }
     
-    private var itemRendererChanged:Boolean = false;
-    private var itemRendererFactory:IFactory;
-    private var renderers:Array;
-    private var repeaterData:RepeaterData;
+    protected var itemRendererChanged:Boolean = false;
+    protected var itemRendererFactory:IFactory;
+    protected var renderers:Array;
+    protected var repeaterData:RepeaterData;
     
     public function set itemRenderer(factory:IFactory):void
     {

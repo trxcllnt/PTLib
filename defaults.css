@@ -5,5 +5,5 @@
 
 Scroller
 {
-  dragCursor: Embed(source="/assets/cursors.swf#Move");
+  dragCursor: Embed(source="assets/cursors.swf#Move");
 }
