@@ -1,30 +1,71 @@
 package com.pt.components.controls
 {
+  import com.pt.components.controls.itemRenderers.CheckBoxItemRenderer;
+  
+  import flash.events.Event;
+  import flash.events.IEventDispatcher;
+  import flash.events.MouseEvent;
+  
   import mx.controls.List;
   import mx.controls.listClasses.IListItemRenderer;
-  import mx.events.ListEvent;
-
+  import mx.core.ClassFactory;
+  
   public class CheckBoxList extends List
   {
     public function CheckBoxList()
     {
       super();
-      addEventListener(ListEvent.ITEM_CLICK, listItemClickHandler);
+      
+      itemRenderer = new ClassFactory(CheckBoxItemRenderer);
+      
+      allowMultipleSelection = true;
     }
     
-    protected function listItemClickHandler(event:ListEvent):void
+    private var cachedFakeEvent:Event;
+    
+    override protected function mouseDownHandler(event:MouseEvent):void
     {
-      var renderer:IListItemRenderer = event.itemRenderer as IListItemRenderer;
-      var data:Object = renderer.data;
-      
-      if('selected' in data && 'selected' in renderer)
+      if(event == cachedFakeEvent)
       {
-        data['selected'] = renderer['selected'] =  (renderer['selected'] && data['selected'] == false) || (renderer['selected'] == false && data['selected'] == false);
+        super.mouseDownHandler(event);
+        cachedFakeEvent = null;
+        return;
       }
-      else if('selected' in renderer)
-        renderer['selected'] = !renderer['selected'];
-      else if('selected' in data)
-        data['selected'] = !data['selected'];
+      
+      var newEvent:MouseEvent = new MouseEvent(event.type,
+                                               event.bubbles,
+                                               event.cancelable,
+                                               event.localX,
+                                               event.localY,
+                                               event.relatedObject,
+                                               true,
+                                               event.altKey,
+                                               event.shiftKey,
+                                               event.buttonDown,
+                                               event.delta);
+      
+      var target:IEventDispatcher = IEventDispatcher(event.target);
+      
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      
+      cachedFakeEvent = newEvent;
+      
+      target.dispatchEvent(newEvent);
+    }
+    
+    override protected function selectItem(item:IListItemRenderer, shiftKey:Boolean, ctrlKey:Boolean, transition:Boolean = true):Boolean
+    {
+      var changed:Boolean = super.selectItem(item, shiftKey, ctrlKey, transition);
+      
+      var uid:String = itemToUID(item.data);
+      
+      if('selected' in item)
+        item['selected'] = (uid in selectedData);
+      if(item.data && 'selected' in item.data)
+        item.data['selected'] = (uid in selectedData);
+      
+      return changed;
     }
   }
 }
