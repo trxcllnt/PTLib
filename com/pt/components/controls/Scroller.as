@@ -1,6 +1,7 @@
 package com.pt.components.controls
 {
   import flash.display.DisplayObject;
+  import flash.display.DisplayObjectContainer;
   import flash.display.Graphics;
   import flash.display.Sprite;
   import flash.events.Event;
@@ -616,7 +617,7 @@ package com.pt.components.controls
       return bars.indexOf("b") != -1;
     }
     
-    private var cursorChild:IFlexDisplayObject;
+    private var cursorChild:DisplayObjectContainer;
     
     protected function cursorDownHandler(event:MouseEvent):void
     {
@@ -626,17 +627,20 @@ package com.pt.components.controls
       var p:Point = new Point(event.stageX, event.stageY);
       coords = p;
       
-      if(cursorChild && stage.contains(cursorChild as DisplayObject))
-        stage.removeChild(cursorChild as DisplayObject);
+      if(cursorChild && stage.contains(cursorChild))
+        stage.removeChild(cursorChild);
       
       var cursor:Class = getStyle('dragCursor');
       if(cursor)
       {
         Mouse.hide();
         
-        cursorChild = IFlexDisplayObject(new cursor());
-        stage.addChild(cursorChild as DisplayObject);
-        cursorChild.move(p.x, p.y);
+        cursorChild = DisplayObjectContainer(new cursor());
+        cursorChild.mouseChildren = false;
+        cursorChild.mouseEnabled = false;
+        stage.addChild(cursorChild);
+        cursorChild.x = p.x;
+        cursorChild.y = p.y;
       }
       
       target.removeEventListener(MouseEvent.MOUSE_DOWN, cursorDownHandler);
@@ -656,7 +660,10 @@ package com.pt.components.controls
       var p:Point = new Point(event.stageX, event.stageY);
       
       if(cursorChild)
-        cursorChild.move(p.x, p.y);
+      {
+        cursorChild.x = p.x;
+        cursorChild.y = p.y;
+      }
       
       var delta:Point = p.subtract(coords);
       horizontalScrollPosition -= delta.x;
@@ -669,8 +676,8 @@ package com.pt.components.controls
     {
       Mouse.show();
       
-      if(cursorChild && stage.contains(cursorChild as DisplayObject))
-        stage.removeChild(cursorChild as DisplayObject);
+      if(cursorChild && stage.contains(cursorChild))
+        stage.removeChild(cursorChild);
       
       cursorChild = null;
       
