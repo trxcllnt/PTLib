@@ -28,6 +28,9 @@ package com.pt.components.controls
       if(event == cachedFakeEvent)
       {
         super.mouseDownHandler(event);
+        
+        event.stopPropagation();
+        
         cachedFakeEvent = null;
         return;
       }
@@ -59,13 +62,27 @@ package com.pt.components.controls
       var changed:Boolean = super.selectItem(item, shiftKey, ctrlKey, transition);
       
       var uid:String = itemToUID(item.data);
-      
-      if('selected' in item)
-        item['selected'] = (uid in selectedData);
-      if(item.data && 'selected' in item.data)
-        item.data['selected'] = (uid in selectedData);
+      toggleCheckBoxItemRenderer(item, uid in selectedData);
       
       return changed;
+    }
+    
+    override protected function drawItem(item:IListItemRenderer, selected:Boolean=false, highlighted:Boolean=false, caret:Boolean=false, transition:Boolean=false):void
+    {
+      super.drawItem(item, selected, highlighted, caret, transition);
+      
+      toggleCheckBoxItemRenderer(item, selected);
+    }
+    
+    protected function toggleCheckBoxItemRenderer(item:IListItemRenderer, selected:Boolean):void
+    {
+      if(!item)
+        return;
+      
+      if('selected' in item)
+        item['selected'] = selected;
+      if(item.data && 'selected' in item.data)
+        item.data['selected'] = selected;
     }
   }
 }
