@@ -76,7 +76,7 @@ package com.pt.components.containers
     {
       super();
       //Default to absolute (CanvasLayout)
-      layout = ContainerLayout.ABSOLUTE;
+//      layout = ContainerLayout.ABSOLUTE;
     }
     
     override mx_internal function get usePadding():Boolean
@@ -84,7 +84,8 @@ package com.pt.components.containers
       // We never use padding unless we're a box.
       return isBox();
     }
-    private var layoutObject:Layout;
+    
+    protected var layoutObject:Layout;
     
     public function get layout():Layout
     {

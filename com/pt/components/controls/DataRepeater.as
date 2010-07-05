@@ -1,6 +1,6 @@
 package com.pt.components.controls
 {
-  import com.pt.components.controls.dataClasses.RepeaterData;
+  import com.pt.virtual.Dimension;
   
   import flash.display.DisplayObject;
   
@@ -79,7 +79,7 @@ package com.pt.components.controls
     protected var itemRendererChanged:Boolean = false;
     protected var itemRendererFactory:IFactory;
     protected var renderers:Array;
-    protected var repeaterData:RepeaterData;
+    protected var dimension:Dimension;
     
     public function set itemRenderer(factory:IFactory):void
     {
@@ -94,30 +94,12 @@ package com.pt.components.controls
       invalidateDisplayList();
     }
     
-    protected var prequeueLengthChanged:Boolean = false;
-    private var _prequeueLength:Number = 1;
-    
-    public function get prequeueLength():int
-    {
-      return _prequeueLength;
-    }
-    
-    public function set prequeueLength(value:int):void
-    {
-      if(value === _prequeueLength)
-        return;
-      
-      _prequeueLength = value;
-      invalidateSize();
-      invalidateDisplayList();
-    }
-    
     override protected function createChildren():void
     {
       super.createChildren();
       
       renderers = [];
-      repeaterData = new RepeaterData();
+      dimension = new Dimension();
     }
     
     override protected function commitProperties():void
@@ -150,7 +132,7 @@ package com.pt.components.controls
     protected function updateRenderers():void
     {
       var scrollDelta:int = verticalScrollPosition - _previousRendererScrollPosition;
-      var update:Boolean = dataProviderChanged || itemRendererChanged || prequeueLengthChanged || scrollDelta < 0 || scrollDelta >= _nextRendererScrollDelta;
+      var update:Boolean = dataProviderChanged || itemRendererChanged || scrollDelta < 0 || scrollDelta >= _nextRendererScrollDelta;
       if(!update)
         return;
       
@@ -161,9 +143,10 @@ package com.pt.components.controls
       else if(getExplicitOrMeasuredHeight() > 0)
         maxPosition += getExplicitOrMeasuredHeight();
       else
-        maxPosition = repeaterData.size;
+        maxPosition = dimension.size;
       
-      var items:Array = repeaterData.getItemsBetweenPositions(minPosition, maxPosition, prequeueLength);
+      var items:Array = dimension.getItemsAt(minPosition, maxPosition);
+      
       if(items.length == 0)
         items = dataProvider as Array;
       
@@ -220,13 +203,15 @@ package com.pt.components.controls
         
         if(i == 0)
         {
-          var pos:int = repeaterData.getItemPosition(renderer["data"]);
-          var len:int = repeaterData.getItemLength(renderer["data"]);
-          
-          _nextRendererScrollDelta = len;
-          _previousRendererScrollPosition = pos;
-          
+          var pos:int = dimension.getItemPosition(renderer["data"]);
+          var len:int = dimension.getItemSize(renderer["data"]);
           rendererOffset = (verticalScrollPosition - pos) % len || 0;
+        }
+        
+        if(i == (n - 1))
+        {
+          _previousRendererScrollPosition = dimension.getItemPosition(renderer["data"]);
+          _nextRendererScrollDelta = dimension.getItemSize(renderer["data"]);
         }
         
         if(renderer is IUIComponent)
@@ -245,7 +230,6 @@ package com.pt.components.controls
       }
       
       itemRendererChanged = false;
-      prequeueLengthChanged = false;
       dataProviderChanged = false;
     }
     
@@ -254,7 +238,7 @@ package com.pt.components.controls
       if(!itemRendererFactory)
         return;
       
-      repeaterData.clear();
+      dimension.clear();
       
       measuredWidth = 0;
       measuredHeight = 0;
@@ -292,7 +276,7 @@ package com.pt.components.controls
           rHeight = renderer.height;
         }
         
-        repeaterData.addItem(a[i], getRendererEnqueueLength(renderer));
+        dimension.add(a[i], getRendererEnqueueLength(renderer));
         measuredWidth = Math.max(rWidth, measuredWidth);
         measuredHeight += rHeight;
       }
