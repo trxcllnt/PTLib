@@ -94,7 +94,7 @@ package com.pt.components.containers
     
     protected var layouts:Object = {horizontal:BoxLayout, vertical:BoxLayout, absolute:CanvasLayout};
     
-    [Inspectable(category="General", defaultValue="absolute")]
+    [Inspectable(category="General", defaultValue="absolute", enumeration="vertical,horizontal,absolute")]
     
     public function set layout(value:*):void
     {

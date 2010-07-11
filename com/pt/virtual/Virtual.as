@@ -5,17 +5,25 @@ package com.pt.virtual
     public function Virtual(... dimensions)
     {
       for each(var dimension:String in dimensions)
-        dimensions[dimension] = new Dimension();
+        addDimension(dimension);
     }
     
     protected var dimensions:Object = {};
     
     public function add(item:*, size:Number, dimension:String):*
     {
-      if(!(dimension in dimensions))
+      if(!hasDimension(dimension))
         addDimension(dimension);
       
-      return Dimension(dimensions[dimension]).add(item, size);
+      return getDimension(dimension).add(item, size);
+    }
+    
+    public function addAt(item:*, position:Number, size:Number, dimension:String):*
+    {
+      if(!hasDimension(dimension))
+        addDimension(dimension);
+      
+      return getDimension(dimension).addAt(item, position, size);
     }
     
     public function addDimension(name:String):Dimension
@@ -30,10 +38,10 @@ package com.pt.virtual
     
     public function remove(item:*, dimension:String):*
     {
-      if(!(dimension in dimensions))
+      if(!hasDimension(dimension))
         return item;
       
-      return Dimension(dimensions[dimension]).remove(item);
+      return getDimension(dimension).remove(item);
     }
     
     public function removeDimension(name:String):Dimension
@@ -44,6 +52,8 @@ package com.pt.virtual
       var dimension:Dimension = dimensions[name];
       dimension.clear();
       
+      _size--;
+      
       delete dimensions[name];
       
       return dimension;
@@ -51,26 +61,71 @@ package com.pt.virtual
     
     public function updateSize(item:*, dimension:String, size:Number):*
     {
-      if(!(dimension in dimensions))
+      if(!hasDimension(dimension))
         return item;
       
-      return Dimension(dimensions[dimension]).updateSize(item, size);
+      return getDimension(dimension).updateSize(item, size);
     }
     
     public function updatePosition(item:*, dimension:String, position:Number):*
     {
-      if(!(dimension in dimensions))
+      if(!hasDimension(dimension))
         return item;
       
-      return Dimension(dimensions[dimension]).addAt(item, position);
+      return getDimension(dimension).addAt(item, position);
+    }
+    
+    public function getItems(dimension:String):Array
+    {
+      if(!hasDimension(dimension))
+        return [];
+      
+      return getDimension(dimension).getItems();
     }
     
     public function getItemsAt(begin:Number, end:Number, dimension:String):Array
     {
-      if(!(dimension in dimensions))
+      if(!hasDimension(dimension))
         return [];
       
-      return Dimension(dimensions[dimension]).getItemsAt(begin, end);
+      return getDimension(dimension).getBetween(begin, end);
+    }
+    
+    public function getItemPosition(item:*, dimension:String):int
+    {
+        if(!hasDimension(dimension))
+            return 0;
+        
+        return getDimension(dimension).getPosition(item);
+    }
+    
+    public function getItemSize(item:*, dimension:String):int
+    {
+        if(!hasDimension(dimension))
+            return 0;
+        
+        return getDimension(dimension).getSize(item);
+    }
+    
+    public function getSize(dimension:String):int
+    {
+        if(!hasDimension(dimension))
+            return 0;
+        
+        return getDimension(dimension).size;
+    }
+    
+    public function getDimension(dimension:String):Dimension
+    {
+        if(!hasDimension(dimension))
+            return null;
+        
+        return Dimension(dimensions[dimension]);
+    }
+    
+    public function hasDimension(dimension:String):Boolean
+    {
+        return dimension in dimensions;
     }
     
     public function clear():void
@@ -81,7 +136,6 @@ package com.pt.virtual
           continue;
         
         Dimension(dimensions[name]).clear();
-        delete dimensions[name];
       }
       
       dimensions = {};
