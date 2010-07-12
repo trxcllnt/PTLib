@@ -52,12 +52,13 @@ package com.pt.virtual
         }
         
         protected var map:Dictionary = new Dictionary(false);
+        protected var index:Dictionary = new Dictionary(false);
         protected var list:DLinkedList = new DLinkedList();
         
         /**
          * Appends an item with the specified size to the end of the dimension.
          */
-        public function add(item:*, size:Number = 1):*
+        public function add(item:*, size:int = 1):*
         {
             //Nodes can't have sizes less than 1
             if(size < 1)
@@ -65,7 +66,7 @@ package com.pt.virtual
             
             var node:DListNode = has(item) ? map[item] : list.append(new Data(item, size, _size));
             var data:Data = Data(node.data);
-            var position:Number = data.position;
+            var position:int = data.position;
             
             if(has(item))
             {
@@ -87,6 +88,9 @@ package com.pt.virtual
             
             _size += size;
             
+            index[item] = _length;
+            ++_length;
+            
             return item;
         }
         
@@ -95,7 +99,7 @@ package com.pt.virtual
          * doesn't allow overlapping, update the positions of all the items
          * after this position.
          */
-        public function addAt(item:*, position:Number, size:Number = 1):*
+        public function addAt(item:*, position:int, size:int = 1):*
         {
             if(list.isEmpty())
                 return add(item, size);
@@ -114,12 +118,13 @@ package com.pt.virtual
             
             //  Now, we have to get the item at or before the position we're 
             //  inserting to.
-            var startPos:Number = position;
+            var startPos:int = position;
             
             var startItem:*;
             var begin:DListNode;
             var node:DListNode;
             var itr:DListIterator = list.getListIterator();
+            var idx:int;
             
             if(has(startPos))
             {
@@ -138,6 +143,8 @@ package com.pt.virtual
             }
             
             map[item] = node;
+            index[item] = getIndex(startItem);
+            ++_length;
             
             if(!has(position))
                 map[position] = [item];
@@ -161,11 +168,13 @@ package com.pt.virtual
             var data:Data = Data(node.data);
             
             delete map[item];
+            delete index[item];
+            --_length;
             
             var itr:DListIterator = new DListIterator(list, node);
             list.remove(itr);
             
-            var pos:Number = data.position;
+            var pos:int = data.position;
             if(has(pos))
             {
                 map[pos].splice(map[pos].indexOf(item), 1);
@@ -178,12 +187,12 @@ package com.pt.virtual
             return item;
         }
         
-        public function removeAt(position:Number, exact:Boolean = true):*
+        public function removeAt(position:int, exact:Boolean = true):*
         {
             return null;
         }
         
-        public function updateSize(item:*, newSize:Number):*
+        public function updateSize(item:*, newSize:int):*
         {
             if(!has(item))
                 return item;
@@ -204,9 +213,10 @@ package com.pt.virtual
             map = new Dictionary(false);
         }
         
-        protected var _size:Number = 0;
+        protected var _size:int = 0;
+        protected var _length:int = 0;
         
-        public function get size():Number
+        public function get size():int
         {
             return _size;
         }
@@ -257,7 +267,7 @@ package com.pt.virtual
          * finding the item that has a position less than the end index, but is kept in
          * bounds by its size.
          */
-        public function getBetween(begin:Number, end:Number):Array
+        public function getBetween(begin:int, end:int):Array
         {
             var a:Array = [];
             
@@ -307,12 +317,25 @@ package com.pt.virtual
             return Data(DListNode(map[item]).data).position;
         }
         
+        public function getIndex(item:*):int
+        {
+            if(!has(item))
+                return -1;
+            
+            return int(index[item]);
+        }
+        
         public function has(item:*):Boolean
         {
             return (item in map);
         }
         
-        private function normalizePosition(position:Number):Number
+        public function get length():int
+        {
+            return _length;
+        }
+        
+        private function normalizePosition(position:int):int
         {
             while(!has(position) && position >= 0)
                 position -= accuracy;
@@ -326,10 +349,10 @@ import flash.utils.Dictionary;
 internal class Data
 {
     public var item:*;
-    public var size:Number = 0;
-    public var position:Number = 0;
+    public var size:int = 0;
+    public var position:int = 0;
     
-    public function Data(item:*, size:Number, position:Number = 0)
+    public function Data(item:*, size:int, position:int = 0)
     {
         this.item = item;
         this.size = size;

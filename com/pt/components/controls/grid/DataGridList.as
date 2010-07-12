@@ -4,6 +4,8 @@ package com.pt.components.controls.grid
     import com.pt.components.controls.itemRenderers.DataGridListItemRenderer;
     
     import flash.display.DisplayObject;
+    import flash.display.Graphics;
+    import flash.display.Shape;
     
     import mx.containers.BoxDirection;
     import mx.core.ClassFactory;
@@ -52,22 +54,23 @@ package com.pt.components.controls.grid
             return super.processRendererData() || segmentsChanged;
         }
         
-        override protected function setRendererData(renderer:DisplayObject, data:Object):void
+        override protected function setRendererData(renderer:DisplayObject, data:Object, index:int):void
         {
             if(renderer is DataGridListItemRenderer)
             {
+                DataGridListItemRenderer(renderer).index = index;
                 DataGridListItemRenderer(renderer).direction = segmentDirection;
                 DataGridListItemRenderer(renderer).segments = segments;
             }
             
-            super.setRendererData(renderer, data);
+            super.setRendererData(renderer, data, index);
         }
         
         override protected function updateDisplayList(w:Number, h:Number):void
         {
-            super.updateDisplayList(w, h);
-            
             segmentsChanged = false;
+            
+            super.updateDisplayList(w, h);
         }
     }
 }

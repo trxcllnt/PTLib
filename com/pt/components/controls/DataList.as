@@ -220,7 +220,8 @@ package com.pt.components.controls
             var minPosition:Number = isV() ? scrollRect.y : scrollRect.x;
             var maxPosition:Number = minPosition + (isV() ? scrollRect.height : scrollRect.width);
             
-            var items:Array = getDimension(direction).getBetween(minPosition, maxPosition);
+            var d:Dimension = getDimension(direction);
+            var items:Array = d.getBetween(minPosition, maxPosition);
             var n:int = items.length;
             var renderer:DisplayObject;
             
@@ -236,7 +237,7 @@ package com.pt.components.controls
                     addChild(renderer as DisplayObject);
                 }
                 
-                setRendererData(renderer, items[i]);
+                setRendererData(renderer, items[i], d.getIndex(items[i]));
             }
             
             while(renderers.length > n)
@@ -267,7 +268,7 @@ package com.pt.components.controls
         protected var lastRendererScrollPosition:Point = new Point(-10000, -10000);
         protected var newRendererInView:Point = new Point();
         
-        protected function setRendererData(renderer:DisplayObject, data:Object):void
+        protected function setRendererData(renderer:DisplayObject, data:Object, index:int):void
         {
             if(!('data' in renderer))
                 return;
@@ -330,7 +331,7 @@ package com.pt.components.controls
             {
                 for(i = 0; i < n; i++)
                 {
-                    setRendererData(renderer, a[i]);
+                    setRendererData(renderer, a[i], i);
                     
                     if(renderer is IInvalidating)
                         IInvalidating(renderer).validateNow();
@@ -344,7 +345,7 @@ package com.pt.components.controls
             }
             else
             {
-                setRendererData(renderer, a[0]);
+                setRendererData(renderer, a[0], 0);
                 
                 if(isV())
                     renderer.height = itemSize;

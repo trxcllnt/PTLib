@@ -2,7 +2,6 @@ package com.pt.components.containers.layout
 {
     import flash.display.DisplayObject;
     
-    import mx.containers.utilityClasses.Flex;
     import mx.core.IChildList;
     import mx.core.IUIComponent;
     

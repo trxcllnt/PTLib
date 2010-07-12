@@ -20,6 +20,8 @@ package com.pt.components.controls.grid
         
         public var title:String;
         
+        public var children:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
+        
         private var _header:IFactory;
         
         public function get header():IFactory

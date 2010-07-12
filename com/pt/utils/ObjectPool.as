@@ -1,21 +1,23 @@
 package com.pt.utils
 {
+    import mx.core.IFactory;
     
     /**
      * Original author Shane McCartney, http://lostinactionscript.com
+     * Modified to work with IFactory instances by Paul Taylor, http://guyinthechair.com
      */
     public class ObjectPool
     {
         
         public var minSize:int;
         public var size:int = 0;
-        public var Create:Class;
+        public var Create:IFactory;
         public var length:int = 0;
         
         private var list:Array = [];
         private var disposed:Boolean = false;
         
-        public function ObjectPool(Create:Class, minSize:int = 10)
+        public function ObjectPool(Create:IFactory, minSize:int = 10)
         {
             this.Create = Create;
             this.minSize = minSize;
@@ -26,7 +28,7 @@ package com.pt.utils
         
         public function add():void
         {
-            list[length++] = new Create();
+            list[length++] = Create.newInstance();
             size++;
         }
         
@@ -35,7 +37,7 @@ package com.pt.utils
             if(length == 0)
             {
                 size++;
-                return new Create();
+                return Create.newInstance();
             }
             
             return list[--length];

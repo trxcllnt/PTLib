@@ -9,6 +9,8 @@ package com.pt.components.controls.itemRenderers
     
     import flash.display.DisplayObject;
     import flash.display.Graphics;
+    import flash.geom.Point;
+    import flash.geom.Rectangle;
     
     import mx.containers.BoxDirection;
     import mx.core.ClassFactory;
@@ -26,6 +28,8 @@ package com.pt.components.controls.itemRenderers
         }
         
         protected static var pool:MultiTypeObjectPool = new MultiTypeObjectPool();
+        
+        public var index:int = 0;
         
         private var _direction:String = BoxDirection.HORIZONTAL;
         
@@ -68,6 +72,7 @@ package com.pt.components.controls.itemRenderers
                 return;
             
             setData(data);
+            invalidateDisplayList();
         }
         
         protected function setData(data:Object):void
@@ -108,7 +113,7 @@ package com.pt.components.controls.itemRenderers
             _segments = value;
             segmentsChanged = true;
             
-            createColumnRenderers();
+            createSegmentRenderers();
             invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
@@ -124,7 +129,7 @@ package com.pt.components.controls.itemRenderers
             }
         }
         
-        protected function createColumnRenderers():void
+        protected function createSegmentRenderers():void
         {
             var n:int = segments.length;
             var segment:DataGridSegment;
@@ -137,15 +142,14 @@ package com.pt.components.controls.itemRenderers
                 segment = segments[i];
                 
                 factory = segment.renderer;
-                //  Try to get the renderer's type for object pooling without instantiating it.
-                //  If we have to instantiate it, we've all but lost the benefit of object pooling.
+                
                 if(factory is ClassFactory)
                     type = ClassFactory(factory).generator;
                 else
                     type = factory.newInstance()['constructor'];
                 
                 if(!pool.has(type))
-                    pool.add(type);
+                    pool.add(type, factory);
                 
                 renderer = i < numChildren ?
                     getChildAt(i) :
@@ -199,57 +203,79 @@ package com.pt.components.controls.itemRenderers
             }
         }
         
+        private var bgRect:Rectangle = new Rectangle();
+        
         override protected function updateDisplayList(w:Number, h:Number):void
         {
             super.updateDisplayList(w, h);
             
-            if(!segmentsChanged)
-                return;
-            
-            var segment:DataGridSegment;
-            var segmentSize:Number;
-            var n:int = segments.length;
-            var renderer:DisplayObject;
-            var aggregate:Number = 0;
+            if(segmentsChanged)
+            {
+                var segment:DataGridSegment;
+                var segmentSize:Number;
+                var n:int = segments.length;
+                var renderer:DisplayObject;
+                var aggregate:Number = 0;
+                
+                var bgSize:Rectangle = new Rectangle();
+                
+                var pos:Point = new Point();
+                var size:Point = new Point();
+                var sizeProp:String = isV() ? 'height' : 'width';
+                var offProp:String = isV() ? 'width' : 'height';
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    segment = segments[i];
+                    
+                    renderer = getChildAt(i);
+                    
+                    segmentSize = segment.size || segment.measuredSize;
+                    
+                    if(i == 0)
+                    {
+                        bgRect.x = segment.position.x;
+                        bgRect.y = segment.position.y;
+                        bgRect.width = w + (isV() ? segmentSize : w);
+                        bgRect.height = h + (isV() ? h : segmentSize);
+                    }
+                    
+                    pos.x = segment.position.x;
+                    pos.y = segment.position.y;
+                    
+                    if(isV())
+                    {
+                        size.x = w;
+                        size.y = segmentSize;
+                    }
+                    else
+                    {
+                        size.x = segmentSize;
+                        size.y = h;
+                    }
+                    
+                    if(renderer is IUIComponent)
+                    {
+                        
+                        IUIComponent(renderer).setActualSize(Math.min(size.x, IUIComponent(renderer).getExplicitOrMeasuredWidth()),
+                                                             Math.min(size.y, IUIComponent(renderer).getExplicitOrMeasuredHeight()));
+                        IUIComponent(renderer).move(pos.x + Math.max((size.x - renderer.width) / 2, 0),
+                                                    pos.y + Math.max((size.y - renderer.height) / 2, 0));
+                    }
+                    else
+                    {
+                        renderer.width = size.x;
+                        renderer.height = size.y;
+                        renderer.x = pos.x + Math.max((size.x - renderer.width) / 2, 0);
+                        renderer.y = pos.y + Math.max((size.y - renderer.height) / 2, 0);
+                    }
+                }
+            }
             
             var g:Graphics = graphics;
             g.clear();
-            g.lineStyle(1, 0xCCCCCC);
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                segment = segments[i];
-                renderer = getChildAt(i);
-                
-                if(renderer is IUIComponent)
-                {
-                    segmentSize = segment.size || segment.measuredSize;
-                    IUIComponent(renderer).setActualSize(isV() ? w : segmentSize, isV() ? h : segmentSize);
-                    IUIComponent(renderer).move(segment.position.x, segment.position.x);
-                }
-                else
-                {
-                    renderer[isV() ? 'height' : 'width'] = segment.size;
-                    renderer[isV() ? 'width' : 'height'] = isV() ? w : h;
-                    renderer.x = segment.position.x;
-                    renderer.y = segment.position.y;
-                }
-                
-                if(isV())
-                {
-                    g.moveTo(w, renderer.y);
-                    g.lineTo(w, renderer.y + renderer.height);
-                    g.moveTo(0, renderer.y);
-                    g.lineTo(w, renderer.y);
-                }
-                else
-                {
-                    g.moveTo(renderer.x, h);
-                    g.lineTo(renderer.x + renderer.width, h);
-                    g.moveTo(renderer.x, 0);
-                    g.lineTo(renderer.x, h);
-                }
-            }
+            g.beginFill(index % 2 == 0 ? 0xFFFFFF : 0xDDEEFF, 1);
+            g.drawRect(bgRect.x, bgRect.y, bgRect.width, bgRect.height);
             
             segmentsChanged = false;
         }

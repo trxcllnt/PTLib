@@ -3,6 +3,8 @@ package com.pt.components.controls.grid
     import com.pt.components.controls.itemRenderers.DataGridListHeaderRenderer;
     import com.pt.virtual.Dimension;
     
+    import flash.display.Graphics;
+    import flash.display.Shape;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     
@@ -227,7 +229,7 @@ package com.pt.components.controls.grid
             {
                 header.segments = segments;
                 if(list)
-                    list.segments = header.segments;
+                    list.segments = header.computedSegments;
             }
             
             invalidateSize();
@@ -236,6 +238,7 @@ package com.pt.components.controls.grid
         
         protected var list:DataGridList;
         protected var header:DataGridListHeaderRenderer;
+        private var gfx:Shape;
         
         override protected function createChildren():void
         {
@@ -248,11 +251,13 @@ package com.pt.components.controls.grid
             
             list = new DataGridList();
             list.direction = direction;
-            list.segments = header.segments;
+            list.segments = header.computedSegments;
             list.itemSize = itemSize;
             list.variableItemSize = variableItemSize;
-            
             addChild(list);
+            
+            gfx = new Shape();
+            addChild(gfx);
         }
         
         protected function processSegments():void
@@ -266,7 +271,8 @@ package com.pt.components.controls.grid
             
             visibleSegments = Vector.<DataGridSegment>(items);
             header.segments = visibleSegments;
-            list.segments = header.segments;
+            list.segments = header.computedSegments;
+            
         }
         
         override protected function measure():void
@@ -314,13 +320,19 @@ package com.pt.components.controls.grid
             
             setScrollProperties();
             
+            var g:Graphics = graphics;
+            g.clear();
+            g.beginFill(0x00, 0);
+            g.drawRect(0, 0, w, h);
+            
             var segment:DataGridSegment;
+            var i:int;
             if(segmentsChanged)
             {
                 var n:int = segments.length;
                 var c:Number = 0;
                 
-                for(var i:int = 0; i < n; i++)
+                for(i = 0; i < n; i++)
                 {
                     segment = segments[i];
                     segment.position[isV() ? 'x' : 'y'] = c;
@@ -330,6 +342,28 @@ package com.pt.components.controls.grid
             
             if(visibleSegments.length)
             {
+                g = gfx.graphics;
+                g.clear();
+                g.lineStyle(1, 0xCCCCCC);
+                
+                var pt:Point;
+                n = visibleSegments.length;
+                
+                for(i = 0; i < n; i++)
+                {
+                    segment = visibleSegments[i];
+                    pt = segment.position.clone();
+                    
+                    pt.x = isV() ? pt.x - horizontalScrollPosition : 0;
+                    pt.y = isV() ? 0 : pt.y - verticalScrollPosition;
+                    
+                    if((isV() && (pt.x < 0 || pt.x > w)) || (!isV() && (pt.y < 0 || pt.y > h)))
+                        continue;
+                    
+                    g.moveTo(pt.x, pt.y);
+                    g.lineTo(isV() ? pt.x : w , isV() ? h : pt.y);
+                }
+                
                 var scrollIndex:int = isV() ? 1 : 0;
                 segment = visibleSegments[0];
                 scrollDelta[scrollIndex].x = segmentDimension.getPosition(segment);

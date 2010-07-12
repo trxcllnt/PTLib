@@ -2,9 +2,13 @@ package com.pt.utils
 {
     import flash.utils.Dictionary;
     
+    import mx.core.ClassFactory;
+    import mx.core.IFactory;
+    
     /**
-    * Original author Shane McCartney, http://lostinactionscript.com
-    */
+     * Original author Shane McCartney, http://lostinactionscript.com
+     * Modified to work with IFactory instances by Paul Taylor, http://guyinthechair.com
+     */
     public class MultiTypeObjectPool
     {
         public var pools:Dictionary;
@@ -23,9 +27,9 @@ package com.pt.utils
             return (Type in pools);
         }
         
-        public function add(Type:Class):void
+        public function add(Type:Class, factory:IFactory = null):void
         {
-            pools[Type] = new ObjectPool(Type);
+            pools[Type] = new ObjectPool(factory || new ClassFactory(Type));
         }
         
         public function checkOut(Type:Class):*
