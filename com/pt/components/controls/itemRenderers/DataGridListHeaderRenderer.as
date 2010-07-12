@@ -3,6 +3,9 @@ package com.pt.components.controls.itemRenderers
     import com.pt.components.controls.grid.DataGridSegment;
     
     import flash.display.DisplayObject;
+    
+    import mx.core.ClassFactory;
+    import mx.core.IFactory;
 
     public class DataGridListHeaderRenderer extends DataGridListItemRenderer
     {
@@ -38,13 +41,18 @@ package com.pt.components.controls.itemRenderers
             var n:int = segments.length;
             var segment:DataGridSegment;
             var renderer:DisplayObject;
+            var factory:IFactory;
             var type:Class;
             
             for(var i:int = 0; i < n; i++)
             {
                 segment = segments[i];
                 
-                type = segment.header.generator;
+                factory = segment.header;
+                if(factory is ClassFactory)
+                    type = ClassFactory(factory).generator;
+                else
+                    type = factory.newInstance()['constructor'];
                 
                 if(!pool.has(type))
                     pool.add(type);

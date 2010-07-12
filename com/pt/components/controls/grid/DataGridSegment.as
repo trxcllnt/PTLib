@@ -20,52 +20,34 @@ package com.pt.components.controls.grid
         
         public var title:String;
         
-        private var _header:ClassFactory;
+        private var _header:IFactory;
         
-        public function get header():ClassFactory
+        public function get header():IFactory
         {
             return _header;
         }
         
-        public function set header(value:*):void
+        public function set header(factory:IFactory):void
         {
-            if(value === _header)
+            if(factory === _header)
                 return;
             
-            if(value is IFactory && !(value is ClassFactory))
-                value = IFactory(value).newInstance()['constructor'];
-            
-            if(value is Class)
-                value = new ClassFactory(value);
-            
-            if(!(value is ClassFactory))
-                throw new Error('Must pass in a Class or IFactory instance as a header renderer.');
-            
-            _header = ClassFactory(value);
+            _header = factory;
         }
         
-        private var item:ClassFactory;
+        private var item:IFactory;
         
-        public function get renderer():ClassFactory
+        public function get renderer():IFactory
         {
             return item;
         }
         
-        public function set renderer(value:*):void
+        public function set renderer(factory:IFactory):void
         {
-            if(value === item)
+            if(factory === item)
                 return;
             
-            if(value is IFactory && !(value is ClassFactory))
-                value = IFactory(value).newInstance()['constructor'];
-            
-            if(value is Class)
-                value = new ClassFactory(value);
-            
-            if(!(value is ClassFactory))
-                throw new Error('Must pass in a Class or IFactory instance as an itemRenderer.');
-            
-            item = ClassFactory(value);
+            item = factory;
         }
         
         private function applyDataField(data:*):String

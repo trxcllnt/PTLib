@@ -188,16 +188,10 @@ package com.pt.components.controls
         
         protected var renderers:Array;
         
-        public function set itemRenderer(factory:*):void
+        public function set itemRenderer(factory:IFactory):void
         {
             if(factory == itemRendererFactory)
                 return;
-            
-            if(factory is Class)
-                factory = new ClassFactory(factory);
-            
-            if(!(factory is IFactory))
-                throw new Error('Must pass in a Class or IFactory instance as an itemRenderer.');
             
             itemRendererFactory = factory;
             itemRendererChanged = true;

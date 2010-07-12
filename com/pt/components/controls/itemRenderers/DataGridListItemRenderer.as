@@ -11,6 +11,7 @@ package com.pt.components.controls.itemRenderers
     import flash.display.Graphics;
     
     import mx.containers.BoxDirection;
+    import mx.core.ClassFactory;
     import mx.core.IDataRenderer;
     import mx.core.IFactory;
     import mx.core.IUIComponent;
@@ -128,13 +129,20 @@ package com.pt.components.controls.itemRenderers
             var n:int = segments.length;
             var segment:DataGridSegment;
             var renderer:DisplayObject;
+            var factory:IFactory;
             var type:Class;
             
             for(var i:int = 0; i < n; i++)
             {
                 segment = segments[i];
                 
-                type = segment.renderer.generator;
+                factory = segment.renderer;
+                //  Try to get the renderer's type for object pooling without instantiating it.
+                //  If we have to instantiate it, we've all but lost the benefit of object pooling.
+                if(factory is ClassFactory)
+                    type = ClassFactory(factory).generator;
+                else
+                    type = factory.newInstance()['constructor'];
                 
                 if(!pool.has(type))
                     pool.add(type);

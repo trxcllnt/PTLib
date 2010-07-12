@@ -2,13 +2,11 @@ package com.pt.components.controls.grid
 {
     import com.pt.components.controls.DataList;
     import com.pt.components.controls.itemRenderers.DataGridListItemRenderer;
-    import com.pt.virtual.Dimension;
     
     import flash.display.DisplayObject;
-    import flash.geom.Point;
-    import flash.geom.Rectangle;
     
     import mx.containers.BoxDirection;
+    import mx.core.ClassFactory;
     
     public class DataGridList extends DataList
     {
@@ -16,7 +14,7 @@ package com.pt.components.controls.grid
         {
             direction = BoxDirection.VERTICAL;
             variableItemSize = false;
-            itemRenderer = DataGridListItemRenderer;
+            itemRenderer = new ClassFactory(DataGridListItemRenderer);
         }
         
         protected function get segmentDirection():String
