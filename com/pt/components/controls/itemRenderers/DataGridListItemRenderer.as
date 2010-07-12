@@ -2,12 +2,15 @@ package com.pt.components.controls.itemRenderers
 {
     import com.pt.components.containers.VirtualContainer;
     import com.pt.components.containers.layout.ComponentLayout;
-    import com.pt.components.controls.grid.DataGridColumn;
+    import com.pt.components.containers.layout.HLayout;
+    import com.pt.components.controls.grid.DataGridSegment;
+    import com.pt.utils.MultiTypeObjectPool;
     import com.pt.virtual.Virtual;
     
     import flash.display.DisplayObject;
     import flash.display.Graphics;
     
+    import mx.containers.BoxDirection;
     import mx.core.IDataRenderer;
     import mx.core.IFactory;
     import mx.core.IUIComponent;
@@ -19,6 +22,34 @@ package com.pt.components.controls.itemRenderers
         public function DataGridListItemRenderer()
         {
             super();
+        }
+        
+        protected static var pool:MultiTypeObjectPool = new MultiTypeObjectPool();
+        
+        private var _direction:String = BoxDirection.HORIZONTAL;
+        
+        [Inspectable(category="General", enumeration="vertical,horizontal")]
+        
+        public function get direction():String
+        {
+            return _direction;
+        }
+        
+        public function set direction(value:String):void
+        {
+            if(value === _direction)
+                return;
+            
+            _direction = value;
+            
+            segmentsChanged = true;
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        protected function isV():Boolean
+        {
+            return direction == BoxDirection.VERTICAL;
         }
         
         private var _data:Object;
@@ -35,43 +66,49 @@ package com.pt.components.controls.itemRenderers
             if(!data)
                 return;
             
-            var column:DataGridColumn;
+            setData(data);
+        }
+        
+        protected function setData(data:Object):void
+        {
+            var segment:DataGridSegment;
             var renderer:DisplayObject;
-            var n:int = columns.length;
+            var n:int = segments.length;
             
             for(var i:int = 0; i < n; i++)
             {
-                column = columns[i];
+                segment = segments[i];
                 renderer = getChildAt(i);
                 
-                if(column.rendererField in renderer)
+                if(segment.rendererField in renderer)
                 {
-                    renderer[column.rendererField] = column.dataFunction(data);
+                    renderer[segment.rendererField] = segment.dataFunction(data);
                 }
                 else if('data' in renderer)
                 {
-                    renderer['data'] = column.dataFunction(data);
+                    renderer['data'] = segment.dataFunction(data);
                 }
             }
         }
         
-        private var columnsChanged:Boolean = false;
-        protected var _columns:Vector.<DataGridColumn> = new Vector.<DataGridColumn>();
+        private var segmentsChanged:Boolean = false;
+        protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
         
-        public function get columns():Vector.<DataGridColumn>
+        public function get segments():Vector.<DataGridSegment>
         {
-            return _columns;
+            return _segments;
         }
         
-        public function set columns(value:Vector.<DataGridColumn>):void
+        public function set segments(value:Vector.<DataGridSegment>):void
         {
-            if(value === _columns)
+            if(value === _segments)
                 return;
             
-            _columns = value;
-            columnsChanged = true;
+            _segments = value;
+            segmentsChanged = true;
             
             createColumnRenderers();
+            invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
         }
@@ -80,7 +117,7 @@ package com.pt.components.controls.itemRenderers
         {
             super.commitProperties();
             
-            if(columnsChanged)
+            if(segmentsChanged)
             {
                 data = data;
             }
@@ -88,38 +125,45 @@ package com.pt.components.controls.itemRenderers
         
         protected function createColumnRenderers():void
         {
-            var n:int = columns.length;
-            var column:DataGridColumn;
+            var n:int = segments.length;
+            var segment:DataGridSegment;
             var renderer:DisplayObject;
             var type:Class;
             
             for(var i:int = 0; i < n; i++)
             {
-                column = columns[i];
+                segment = segments[i];
                 
-                type = Class(column.itemRenderer.newInstance()['constructor']);
+                type = segment.renderer.generator;
+                
+                if(!pool.has(type))
+                    pool.add(type);
                 
                 renderer = i < numChildren ?
                     getChildAt(i) :
-                    DisplayObject(new type());
+                    DisplayObject(pool.checkOut(type));
                 
                 if(!(renderer is type))
                 {
                     if(contains(renderer))
-                        removeChildAt(i);
-                    renderer = DisplayObject(new type());
+                    {
+                        pool.checkIn(removeChild(renderer));
+                    }
+                    renderer = DisplayObject(pool.checkOut(type));
                 }
                 
                 if(!contains(renderer))
                     addChildAt(renderer, i);
                 
-                if(!isNaN(column.width))
-                    renderer.width = column.width;
+                if(!isNaN(segment.size))
+                {
+                    renderer[isV() ? 'height' : 'width'] = segment.size;
+                }
             }
             
             while(numChildren > n)
             {
-                removeChildAt(numChildren - 1);
+                pool.checkIn(removeChildAt(numChildren - 1));
             }
         }
         
@@ -128,20 +172,20 @@ package com.pt.components.controls.itemRenderers
             if(isNaN(explicitHeight))
                 measuredHeight = 30;
             
-            if(!columnsChanged)
+            if(!segmentsChanged)
                 return;
             
-            var column:DataGridColumn;
-            var n:int = columns.length;
+            var segment:DataGridSegment;
+            var n:int = segments.length;
             var renderer:DisplayObject;
             for(var i:int = 0; i < n; i++)
             {
-                column = columns[i];
+                segment = segments[i];
                 renderer = getChildAt(i);
-                column.measuredWidth = Math.max(renderer is IUIComponent ?
-                                                IUIComponent(renderer).getExplicitOrMeasuredWidth() :
-                                                renderer.width,
-                                                column.measuredWidth);
+                segment.measuredSize = Math.max(renderer is IUIComponent ?
+                                                IUIComponent(renderer)[isV() ? 'getExplicitOrMeasuredHeight' : 'getExplicitOrMeasuredWidth']() :
+                                                renderer[isV() ? 'height' : 'width'],
+                                                segment.measuredSize);
             }
         }
         
@@ -149,11 +193,12 @@ package com.pt.components.controls.itemRenderers
         {
             super.updateDisplayList(w, h);
             
-            if(!columnsChanged)
+            if(!segmentsChanged)
                 return;
             
-            var column:DataGridColumn;
-            var n:int = columns.length;
+            var segment:DataGridSegment;
+            var segmentSize:Number;
+            var n:int = segments.length;
             var renderer:DisplayObject;
             var aggregate:Number = 0;
             
@@ -163,27 +208,40 @@ package com.pt.components.controls.itemRenderers
             
             for(var i:int = 0; i < n; i++)
             {
-                column = columns[i];
+                segment = segments[i];
                 renderer = getChildAt(i);
                 
                 if(renderer is IUIComponent)
                 {
-                    IUIComponent(renderer).setActualSize(column.width || column.measuredWidth, h);
-                    IUIComponent(renderer).move(column.x, 0);
+                    segmentSize = segment.size || segment.measuredSize;
+                    IUIComponent(renderer).setActualSize(isV() ? w : segmentSize, isV() ? h : segmentSize);
+                    IUIComponent(renderer).move(segment.position.x, segment.position.x);
                 }
                 else
                 {
-                    renderer.width = column.width;
-                    renderer.x = column.x;
+                    renderer[isV() ? 'height' : 'width'] = segment.size;
+                    renderer[isV() ? 'width' : 'height'] = isV() ? w : h;
+                    renderer.x = segment.position.x;
+                    renderer.y = segment.position.y;
                 }
                 
-                g.moveTo(renderer.x, h);
-                g.lineTo(renderer.x + renderer.width, h);
-                g.moveTo(renderer.x, 0);
-                g.lineTo(renderer.x, h);
+                if(isV())
+                {
+                    g.moveTo(w, renderer.y);
+                    g.lineTo(w, renderer.y + renderer.height);
+                    g.moveTo(0, renderer.y);
+                    g.lineTo(w, renderer.y);
+                }
+                else
+                {
+                    g.moveTo(renderer.x, h);
+                    g.lineTo(renderer.x + renderer.width, h);
+                    g.moveTo(renderer.x, 0);
+                    g.lineTo(renderer.x, h);
+                }
             }
             
-            columnsChanged = false;
+            segmentsChanged = false;
         }
     }
 }

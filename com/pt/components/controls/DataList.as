@@ -9,6 +9,7 @@ package com.pt.components.controls
     import flash.geom.Point;
     import flash.geom.Rectangle;
     
+    import mx.containers.BoxDirection;
     import mx.core.ClassFactory;
     import mx.core.IDataRenderer;
     import mx.core.IFactory;
@@ -28,17 +29,14 @@ package com.pt.components.controls
             layout.target = this;
         }
         
-        public static const VERTICAL:String = 'vertical';
-        public static const HORIZONTAL:String = 'horizontal';
-        
         protected function isV():Boolean
         {
-            return direction == VERTICAL;
+            return direction == BoxDirection.VERTICAL;
         }
         
         protected var layout:ComponentLayout;
         
-        private var _direction:String = VERTICAL;
+        private var _direction:String = BoxDirection.VERTICAL;
         protected var directionChanged:Boolean = false;
         
         [Inspectable(type="String", enumeration="vertical,horizontal")]
@@ -62,7 +60,7 @@ package com.pt.components.controls
         
         public function getDimension(direction:String):Dimension
         {
-            if(direction == HORIZONTAL)
+            if(direction == BoxDirection.VERTICAL)
                 return virtual.getDimension('x');
             
             return virtual.getDimension('y');
@@ -81,7 +79,8 @@ package com.pt.components.controls
                 return;
             
             _itemSize = value;
-            variableItemSize = !isNaN(value);
+            if(isNaN(value))
+                variableItemSize = true;
         }
         
         private var _variableItemSize:Boolean = true;
@@ -146,7 +145,7 @@ package com.pt.components.controls
             if(value === _verticalScrollPosition)
                 return;
             
-            newRendererInView.y = int(value < _verticalScrollPosition ?
+            newRendererInView.y = int((value < _verticalScrollPosition) ?
                 value <= scrollDelta[0].x :
                 value + height >= scrollDelta[0].y);
             
@@ -221,7 +220,7 @@ package com.pt.components.controls
         
         protected function commitRendererData():void
         {
-            if(!processRendererData())
+            if(!processRendererData() || !scrollRect)
                 return;
             
             var minPosition:Number = isV() ? scrollRect.y : scrollRect.x;
@@ -255,7 +254,7 @@ package com.pt.components.controls
         protected function processRendererData():Boolean
         {
             var newRenderer:Boolean = isV() ? Boolean(newRendererInView.y) : Boolean(newRendererInView.x);
-            return (dataProviderChanged || itemRendererChanged || newRenderer || directionChanged) && scrollRect;
+            return (dataProviderChanged || itemRendererChanged || newRenderer || directionChanged);
         }
         
         override protected function measure():void
@@ -302,7 +301,8 @@ package com.pt.components.controls
                 scrollDelta[scrollIndex].y = getDimension(direction).getPosition(item) + getDimension(direction).getSize(item);
             }
             
-            newRendererInView = new Point();
+            newRendererInView.x = 0;
+            newRendererInView.y = 0;
             itemRendererChanged = false;
             dataProviderChanged = false;
             directionChanged = false;

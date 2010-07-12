@@ -5,9 +5,12 @@ package com.pt.components.containers
     import com.pt.components.containers.layout.VirtualCanvasLayout;
     import com.pt.components.containers.layout.layout;
     import com.pt.components.containers.layout.union;
+    import com.pt.virtual.Dimension;
     import com.pt.virtual.Virtual;
     
     import flash.display.DisplayObject;
+    import flash.display.Graphics;
+    import flash.geom.Point;
     import flash.geom.Rectangle;
     
     import mx.containers.utilityClasses.BoxLayout;
@@ -32,10 +35,16 @@ package com.pt.components.containers
         
         override public function addChildAt(child:DisplayObject, index:int):DisplayObject
         {
-            var children:Array = _virtual.getItems("x").concat(_virtual.getItems("y"));
+            var children:Array = v.getItems("x").concat(v.getItems("y"));
             
             if(children.indexOf(child) == -1)
+            {
                 measureLayout = true;
+                scrollBounds = null;
+            }
+            
+            invalidateSize();
+            invalidateDisplayList();
             
             return super.addChildAt(child, index);
         }
@@ -43,11 +52,16 @@ package com.pt.components.containers
         override public function removeChild(child:DisplayObject):DisplayObject
         {
             measureLayout = true;
+            scrollBounds = null;
+            
+            invalidateSize();
+            invalidateDisplayList();
             
             return super.removeChild(child);
         }
         
         private var _showMask:Boolean = true;
+        
         public function get showMask():Boolean
         {
             return _showMask;
@@ -59,6 +73,22 @@ package com.pt.components.containers
                 return;
             
             _showMask = value;
+            scrollChildren();
+        }
+        
+        private var _showDebug:Boolean = false;
+        
+        public function get showDebug():Boolean
+        {
+            return _showDebug;
+        }
+        
+        public function set showDebug(value:Boolean):void
+        {
+            if(value === _showDebug)
+                return;
+            
+            _showDebug = value;
             scrollChildren();
         }
         
@@ -81,10 +111,10 @@ package com.pt.components.containers
         
         override protected function createChildren():void
         {
-            super.createChildren();
+            if(!v)
+                v = new Virtual('x', 'y');
             
-            if(!_virtual)
-                _virtual = new Virtual('x', 'y');
+            super.createChildren();
         }
         
         override protected function measure():void
@@ -93,11 +123,11 @@ package com.pt.components.containers
                 super.measure();
         }
         
-        protected var _virtual:Virtual;
+        protected var v:Virtual;
         
         layout function get virtual():Virtual
         {
-            return _virtual;
+            return v;
         }
         
         layout var measureLayout:Boolean = true;
@@ -108,74 +138,9 @@ package com.pt.components.containers
             if(scrollBounds && !measureLayout)
                 return scrollBounds;
             
-            var left:Number = 0;
-            var top:Number = 0;
-            var right:Number = 0;
-            var bottom:Number = 0;
-            var x:Number;
-            var y:Number;
-            var width:Number;
-            var height:Number;
-            var child:DisplayObject;
-            var uic:IUIComponent;
+            scrollBounds = new Rectangle(0, 0, v.getSize("x"), v.getSize("y"));;
             
-            var xChildren:Array = _virtual.getItems("x");
-            var yChildren:Array = _virtual.getItems("y");
-            
-            var children:Array = union(xChildren, yChildren);
-            var childList:IChildList = new ArrayChildList(children.length ? children : getChildren());
-            var n:int = childList.numChildren;
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                child = childList.getChildAt(i);
-                if(child is IUIComponent)
-                {
-                    if(!IUIComponent(child).includeInLayout)
-                        continue;
-                    uic = PostScaleAdapter.getCompatibleIUIComponent(child);
-                    width = uic.getExplicitOrMeasuredWidth();
-                    height = uic.getExplicitOrMeasuredHeight();
-                    x = uic.x;
-                    y = uic.y;
-                }
-                else
-                {
-                    width = child.width;
-                    height = child.height;
-                    x = child.x;
-                    y = child.y;
-                }
-                
-                left = Math.min(left, x);
-                top = Math.min(top, y);
-                
-                // width/height can be NaN if using percentages and
-                // hasn't been layed out yet.
-                if(!isNaN(width))
-                    right = Math.max(right, x + width);
-                if(!isNaN(height))
-                    bottom = Math.max(bottom, y + height);
-            }
-            
-            // Add in the right/bottom margins and view metrics.
-            var vm:EdgeMetrics = viewMetrics;
-            
-            var bounds:Rectangle = new Rectangle();
-            bounds.left = left;
-            bounds.top = top;
-            bounds.right = right;
-            bounds.bottom = bottom;
-            
-            if(usePadding)
-            {
-                bounds.right += getStyle("paddingRight");
-                bounds.bottom += getStyle("paddingBottom");
-            }
-            
-            scrollBounds = bounds;
-            
-            return bounds;
+            return scrollBounds;
         }
         
         override protected function scrollChildren():void
@@ -187,10 +152,34 @@ package com.pt.components.containers
                 super.scrollChildren();
             else
                 contentPane.scrollRect = null;
-//            if(!contentPane)
-//                return;
-//            
-//            contentPane.scrollRect = showMask ? new Rectangle(0, 0, unscaledWidth, unscaledHeight) : null;
+            
+            var g:Graphics = graphics;
+            g.clear();
+            
+            if(showDebug)
+            {
+                g.lineStyle(2, 0x0, 0.75);
+                g.drawRect(horizontalScrollPosition, verticalScrollPosition, unscaledWidth, unscaledHeight);
+            }
+            else if(!showMask)
+            {
+                var n:int = numChildren;
+                var child:DisplayObject;
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    child = getChildAt(i);
+                    if(child is IUIComponent)
+                    {
+                        IUIComponent(child).move(child.x - horizontalScrollPosition, child.y - verticalScrollPosition);
+                    }
+                    else
+                    {
+                        child.x -= horizontalScrollPosition;
+                        child.y -= verticalScrollPosition;
+                    }
+                }
+            }
         }
     }
 }

@@ -6,74 +6,60 @@ package com.pt.components.controls.grid
     
     import flash.display.DisplayObject;
     import flash.geom.Point;
+    import flash.geom.Rectangle;
+    
+    import mx.containers.BoxDirection;
     
     public class DataGridList extends DataList
     {
         public function DataGridList()
         {
-            direction = VERTICAL;
+            direction = BoxDirection.VERTICAL;
             variableItemSize = false;
             itemRenderer = DataGridListItemRenderer;
         }
         
-        public function get columnDirection():String
+        protected function get segmentDirection():String
         {
-            if(direction == HORIZONTAL)
-                return VERTICAL;
+            if(direction == BoxDirection.HORIZONTAL)
+                return BoxDirection.VERTICAL;
             
-            return HORIZONTAL;
+            return BoxDirection.HORIZONTAL;
         }
         
-        protected var _columns:Vector.<DataGridColumn> = new Vector.<DataGridColumn>();
-        private var columnsChanged:Boolean = false;
+        protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
+        private var segmentsChanged:Boolean = false;
         
-        public function get columns():Vector.<DataGridColumn>
+        public function get segments():Vector.<DataGridSegment>
         {
-            return _columns;
+            return _segments;
         }
         
-        public function set columns(value:Vector.<DataGridColumn>):void
+        public function set segments(value:Vector.<DataGridSegment>):void
         {
-            if(value === _columns)
+            if(value === _segments)
                 return;
             
-            _columns = value;
-            visibleColumns = _columns;
-            itemRendererChanged = true;
+            _segments = value;
+            segmentsChanged = true;
+            
+            commitRendererData();
+            
             invalidateSize();
             invalidateDisplayList();
         }
         
         override protected function processRendererData():Boolean
         {
-            return super.processRendererData() || newRendererInView.x;
-        }
-        
-        private var visibleColumns:Vector.<DataGridColumn> = new Vector.<DataGridColumn>();
-        
-        override protected function commitRendererData():void
-        {
-            if(!processRendererData())
-                return;
-            
-            if(dataProviderChanged || itemRendererChanged || newRendererInView.x)
-            {
-                var minPosition:Number = isV() ? scrollRect.x : scrollRect.y;
-                var maxPosition:Number = minPosition + (isV() ? scrollRect.width : scrollRect.height);
-                
-                var items:Array = getDimension(columnDirection).getBetween(minPosition, maxPosition);
-                visibleColumns = Vector.<DataGridColumn>(items);
-                trace(visibleColumns.length);
-            }
-            
-            super.commitRendererData();
+            return super.processRendererData() || segmentsChanged;
         }
         
         override protected function setRendererData(renderer:DisplayObject, data:Object):void
         {
             if(renderer is DataGridListItemRenderer)
             {
-                DataGridListItemRenderer(renderer).columns = visibleColumns;
+                DataGridListItemRenderer(renderer).direction = segmentDirection;
+                DataGridListItemRenderer(renderer).segments = segments;
             }
             
             super.setRendererData(renderer, data);
@@ -81,50 +67,9 @@ package com.pt.components.controls.grid
         
         override protected function updateDisplayList(w:Number, h:Number):void
         {
-            var column:DataGridColumn;
-            var n:int = columns.length;
-            var cX:Number = 0;
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                column = columns[i];
-                column.x = cX;
-                cX += column.width;
-            }
-            
-            if(visibleColumns.length)
-            {
-                var scrollIndex:int = isV() ? 1 : 0;
-                var d:Dimension = getDimension(columnDirection);
-                column = visibleColumns[0];
-                scrollDelta[scrollIndex].x = d.getPosition(column);
-                column = visibleColumns[visibleColumns.length - 1];
-                scrollDelta[scrollIndex].y = d.getPosition(column) + d.getSize(column);
-            }
-            
             super.updateDisplayList(w, h);
-        }
-        
-        override protected function measureAllDataItems():void
-        {
-            super.measureAllDataItems();
             
-            var d:Dimension = getDimension(columnDirection);
-            d.clear();
-            var column:DataGridColumn;
-            var n:int = columns.length;
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                column = columns[i];
-                
-                if(isNaN(column.width))
-                    column.width = column.measuredWidth;
-                
-                d.add(column, column.width);
-            }
-            
-            measuredWidth = d.size;
+            segmentsChanged = false;
         }
     }
 }

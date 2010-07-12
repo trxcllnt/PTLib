@@ -246,12 +246,12 @@ package com.pt.components.controls
         {
             super.updateDisplayList(w, h);
             
-            if(w <= 0)
-                w = parent.width;
-            if(h <= 0)
-                h = parent.height;
-            
-            setActualSize(w, h);
+            if(w <= 0 || h <= 0)
+            {
+                w = w || parent.width;
+                h = h || parent.height;
+                setActualSize(w, h);
+            }
             
             if(target)
             {
@@ -265,47 +265,73 @@ package com.pt.components.controls
         
         protected function sizeTarget(target:DisplayObject):void
         {
-            if(target is IUIComponent)
+            if(!(target is IUIComponent))
+                return;
+            
+            var cw:Number = 0;
+            var ch:Number = 0;
+            
+            if(isVirtual)
             {
-                var cw:Number = 0;
-                var ch:Number = 0;
-                
-                if(isVirtual)
-                {
-                    cw = unscaledWidth;
-                    ch = unscaledHeight;
-                }
-                else
-                {
-                    if(!isNaN(IUIComponent(target).percentWidth))
-                        cw = unscaledWidth;
-                    else
-                        cw = IUIComponent(target).getExplicitOrMeasuredWidth();
-                    if(!isNaN(IUIComponent(target).percentHeight))
-                        ch = unscaledHeight;
-                    else
-                        ch = IUIComponent(target).getExplicitOrMeasuredHeight();
-                }
-                
-                if(inset)
-                {
-                    cw -= (hasVertical && hasRight) ? 16 : 0;
-                    ch -= (hasHorizontal && hasBottom) ? 16 : 0;
-                    cw -= (hasVertical && hasLeft) ? 16 : 0;
-                    ch -= (hasHorizontal && hasTop) ? 16 : 0;
-                }
-                
-                IUIComponent(target).setActualSize(cw, ch);
+                cw = unscaledWidth;
+                ch = unscaledHeight;
             }
+            else
+            {
+                if(!isNaN(IUIComponent(target).percentWidth))
+                    cw = unscaledWidth;
+                else
+                    cw = IUIComponent(target).getExplicitOrMeasuredWidth();
+                if(!isNaN(IUIComponent(target).percentHeight))
+                    ch = unscaledHeight;
+                else
+                    ch = IUIComponent(target).getExplicitOrMeasuredHeight();
+            }
+            
+            if(inset)
+            {
+                cw -= (hasVertical && hasRight) ? 16 : 0;
+                ch -= (hasHorizontal && hasBottom) ? 16 : 0;
+                cw -= (hasVertical && hasLeft) ? 16 : 0;
+                ch -= (hasHorizontal && hasTop) ? 16 : 0;
+            }
+            
+            IUIComponent(target).setActualSize(cw, ch);
         }
         
         protected function positionTarget(target:DisplayObject):void
         {
+            var xx:Number = 0
+            var yy:Number = 0;
+            
+            var ww:Number = unscaledWidth;
+            var hh:Number = unscaledHeight;
+            
+            if(inset)
+            {
+                xx = hasVertical && hasLeft ? 16 : 0;
+                yy = hasHorizontal && hasTop ? 16 : 0;
+                ww -= (hasVertical && hasRight) ? 16 : 0;
+                hh -= (hasHorizontal && hasBottom) ? 16 : 0;
+                ww -= (hasVertical && hasLeft) ? 16 : 0;
+                hh -= (hasHorizontal && hasTop) ? 16 : 0;
+            }
+            
+            if(target is IUIComponent)
+            {
+                IUIComponent(target).move(xx, yy);
+            }
+            else
+            {
+                target.x = xx;
+                target.y = yy;
+            }
+            
             if(isVirtual)
                 return;
             
-            var xx:Number = horizontalScrollPosition;
-            var yy:Number = verticalScrollPosition;
+            xx = horizontalScrollPosition;
+            yy = verticalScrollPosition;
             
             if(targetWidth < unscaledWidth)
             {
@@ -333,24 +359,6 @@ package com.pt.components.controls
                         yy = unscaledHeight - targetHeight * -1;
                         break;
                 }
-            }
-            
-            var ww:Number = unscaledWidth;
-            var hh:Number = unscaledHeight;
-            
-            if(inset)
-            {
-                target.x = hasVertical && hasLeft ? 16 : 0;
-                target.y = hasHorizontal && hasTop ? 16 : 0;
-                ww -= (hasVertical && hasRight) ? 16 : 0;
-                hh -= (hasHorizontal && hasBottom) ? 16 : 0;
-                ww -= (hasVertical && hasLeft) ? 16 : 0;
-                hh -= (hasHorizontal && hasTop) ? 16 : 0;
-            }
-            else
-            {
-                target.x = 0;
-                target.y = 0;
             }
             
             target.scrollRect = new Rectangle(xx, yy, ww, hh);
@@ -506,17 +514,17 @@ package com.pt.components.controls
             verticalScrollPosition -= (event.delta * mouseWheelMultiplier);
         }
         
-        protected function get isVirtual():Boolean
+        public function get isVirtual():Boolean
         {
             return scrollType == SCROLL_TYPE_VIRTUAL;
         }
         
-        protected function get hasVertical():Boolean
+        public function get hasVertical():Boolean
         {
             return target && targetHProp in target && unscaledHeight < targetHeight;
         }
         
-        protected function get hasHorizontal():Boolean
+        public function get hasHorizontal():Boolean
         {
             return target && targetWProp in target && unscaledWidth < targetWidth;
         }
@@ -537,22 +545,22 @@ package com.pt.components.controls
             return target[targetHProp];
         }
         
-        protected function get hasLeft():Boolean
+        public function get hasLeft():Boolean
         {
             return bars.indexOf("l") != -1;
         }
         
-        protected function get hasRight():Boolean
+        public function get hasRight():Boolean
         {
             return bars.indexOf("r") != -1;
         }
         
-        protected function get hasTop():Boolean
+        public function get hasTop():Boolean
         {
             return bars.indexOf("t") != -1;
         }
         
-        protected function get hasBottom():Boolean
+        public function get hasBottom():Boolean
         {
             return bars.indexOf("b") != -1;
         }

@@ -1,0 +1,300 @@
+package com.pt.components.controls.grid
+{
+    import com.pt.components.controls.itemRenderers.DataGridListHeaderRenderer;
+    import com.pt.virtual.Dimension;
+    
+    import flash.geom.Point;
+    import flash.geom.Rectangle;
+    
+    import mx.containers.BoxDirection;
+    import mx.core.UIComponent;
+    
+    public class DataGridContainer extends UIComponent
+    {
+        public function DataGridContainer()
+        {
+            super();
+        }
+        
+        public function get headerSize():Number
+        {
+            if(header)
+                return isV() ? header.getExplicitOrMeasuredHeight() : header.getExplicitOrMeasuredWidth();
+            
+            return 0;
+        }
+        
+        protected function isV():Boolean
+        {
+            return direction == BoxDirection.VERTICAL;
+        }
+        
+        private var _dataProvider:Object;
+        
+        public function get dataProvider():Object
+        {
+            return _dataProvider;
+        }
+        
+        public function set dataProvider(value:Object):void
+        {
+            if(value === _dataProvider)
+                return;
+            
+            _dataProvider = value;
+            
+            if(header)
+                header.data = dataProvider;
+            if(list)
+                list.dataProvider = dataProvider;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        private var _direction:String = BoxDirection.VERTICAL;
+        
+        [Inspectable(type="String", enumeration="vertical,horizontal")]
+        
+        public function get direction():String
+        {
+            return _direction;
+        }
+        
+        public function set direction(value:String):void
+        {
+            if(value === _direction)
+                return;
+            
+            _direction = value;
+            
+            if(header)
+                header.direction = value;
+            if(list)
+                list.direction = value;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        private var scrollPosition:Point = new Point();
+        
+        public function get horizontalScrollPosition():Number
+        {
+            return scrollPosition.x;
+        }
+        
+        public function set horizontalScrollPosition(value:Number):void
+        {
+            if(scrollPosition.x === value)
+                return;
+            
+            newRendererInView.x = int((value < scrollPosition.x) ?
+                                      value <= scrollDelta[1].x :
+                                      value + width >= scrollDelta[1].y);
+            
+            scrollPosition.x = value;
+            
+            if(newRendererInView.x)
+            {
+                lastRendererScrollPosition.x = value;
+                if(isV())
+                    processSegments();
+            }
+            
+            invalidateDisplayList();
+        }
+        
+        public function get verticalScrollPosition():Number
+        {
+            return scrollPosition.y;
+        }
+        
+        public function set verticalScrollPosition(value:Number):void
+        {
+            if(scrollPosition.y === value)
+                return;
+            
+            newRendererInView.y = int((value < scrollPosition.y) ?
+                                      value <= scrollDelta[0].x :
+                                      value + height >= scrollDelta[0].y);
+            
+            scrollPosition.y = value;
+            
+            if(newRendererInView.y)
+            {
+                lastRendererScrollPosition.y = value;
+                if(!isV())
+                    processSegments();
+            }
+            
+            invalidateDisplayList();
+        }
+        
+        protected function setScrollProperties():void
+        {
+            if(header)
+            {
+                header.scrollRect = new Rectangle(
+                    isV() ? horizontalScrollPosition : 0,
+                    isV() ? 0 : verticalScrollPosition,
+                    isV() ? unscaledWidth : header.width,
+                    isV() ? header.height : unscaledHeight);
+            }
+            
+            if(list)
+            {
+                list.horizontalScrollPosition = scrollPosition.x;
+                list.verticalScrollPosition = scrollPosition.y;
+            }
+        }
+        
+        protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
+        protected var visibleSegments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
+        private var segmentDimension:Dimension = new Dimension();
+        private var segmentsChanged:Boolean = false;
+        
+        public function get segments():Vector.<DataGridSegment>
+        {
+            return _segments;
+        }
+        
+        public function set segments(value:Vector.<DataGridSegment>):void
+        {
+            if(value === _segments)
+                return;
+            
+            _segments = value;
+            visibleSegments = _segments;
+            segmentsChanged = true;
+            
+            if(header)
+            {
+                header.segments = segments;
+                if(list)
+                    list.segments = header.segments;
+            }
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        protected var list:DataGridList;
+        protected var header:DataGridListHeaderRenderer;
+        
+        override protected function createChildren():void
+        {
+            super.createChildren();
+            
+            header = new DataGridListHeaderRenderer();
+            header.segments = segments;
+            addChild(header);
+            
+            list = new DataGridList();
+            list.direction = direction;
+            list.segments = header.segments;
+            
+            addChild(list);
+        }
+        
+        protected function processSegments():void
+        {
+            if(!(segmentsChanged || newRendererInView.x || newRendererInView.y))
+                return;
+            
+            var minPosition:Number = isV() ? horizontalScrollPosition : verticalScrollPosition;
+            var maxPosition:Number = minPosition + (isV() ? unscaledWidth : unscaledHeight);
+            var items:Array = segmentDimension.getBetween(minPosition, maxPosition);
+            
+            visibleSegments = Vector.<DataGridSegment>(items);
+            header.segments = visibleSegments;
+            list.segments = header.segments;
+        }
+        
+        override protected function measure():void
+        {
+            super.measure();
+            
+            if(segmentsChanged)
+            {
+                segmentDimension.clear();
+                var segment:DataGridSegment;
+                var n:int = segments.length;
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    segment = segments[i];
+                    
+                    if(isNaN(segment.size))
+                        segment.size = segment.measuredSize;
+                    
+                    segmentDimension.add(segment, segment.size);
+                }
+                
+                if(isV())
+                {
+                    measuredWidth = segmentDimension.size;
+                    measuredHeight = list.getExplicitOrMeasuredHeight();
+                }
+                else
+                {
+                    measuredWidth = list.getExplicitOrMeasuredWidth();
+                    measuredHeight = segmentDimension.size;
+                }
+                
+                processSegments();
+            }
+        }
+        
+        protected var scrollDelta:Vector.<Point> = Vector.<Point>([new Point(), new Point()]);
+        protected var lastRendererScrollPosition:Point = new Point(-10000, -10000);
+        protected var newRendererInView:Point = new Point();
+        
+        override protected function updateDisplayList(w:Number, h:Number):void
+        {
+            super.updateDisplayList(w, h);
+            
+            setScrollProperties();
+            
+            var segment:DataGridSegment;
+            if(segmentsChanged)
+            {
+                var n:int = segments.length;
+                var c:Number = 0;
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    segment = segments[i];
+                    segment.position[isV() ? 'x' : 'y'] = c;
+                    c += segment.size;
+                }
+            }
+            
+            if(visibleSegments.length)
+            {
+                var scrollIndex:int = isV() ? 1 : 0;
+                segment = visibleSegments[0];
+                scrollDelta[scrollIndex].x = segmentDimension.getPosition(segment);
+                segment = visibleSegments[visibleSegments.length - 1];
+                scrollDelta[scrollIndex].y = segmentDimension.getPosition(segment) + segmentDimension.getSize(segment);
+            }
+            
+            if(isV())
+            {
+                header.setActualSize(w, header.getExplicitOrMeasuredHeight());
+                list.setActualSize(w, h - header.height);
+                list.move(0, header.height);
+            }
+            else
+            {
+                header.setActualSize(header.getExplicitOrMeasuredWidth(), h);
+                list.setActualSize(w - header.width, h);
+                list.move(header.width, 0);
+            }
+            
+            newRendererInView.x = 0;
+            newRendererInView.y = 0;
+            segmentsChanged = false;
+        }
+    }
+}

@@ -6,6 +6,7 @@ package com.pt.components.containers.layout
     import flash.display.DisplayObject;
     import flash.geom.Point;
     
+    import mx.containers.BoxDirection;
     import mx.core.IUIComponent;
 
     public class ListLayout extends ComponentLayout
@@ -17,7 +18,7 @@ package com.pt.components.containers.layout
         
         protected function isV():Boolean
         {
-            return list.direction == DataList.VERTICAL;
+            return list.direction == BoxDirection.VERTICAL;
         }
         
         override public function updateDisplayList(w:Number, h:Number):void
