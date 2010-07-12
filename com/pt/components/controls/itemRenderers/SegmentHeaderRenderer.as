@@ -16,6 +16,7 @@ package com.pt.components.controls.itemRenderers
             super();
             
             setStyle('horizontalAlign', 'center');
+            setStyle('verticalAlign', 'middle');
             
             layout = new HLayout();
             layout.target = this;

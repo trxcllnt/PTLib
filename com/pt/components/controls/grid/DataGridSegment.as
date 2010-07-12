@@ -16,7 +16,7 @@ package com.pt.components.controls.grid
         public var headerField:String;
         
         public var dataField:String;
-        public var dataFunction:Function = applyDataField;
+        public var dataFunction:Function;
         
         public var title:String;
         
@@ -52,8 +52,11 @@ package com.pt.components.controls.grid
             item = factory;
         }
         
-        private function applyDataField(data:*):String
+        public function applyData(data:*):String
         {
+            if(dataFunction != null)
+                return dataFunction(data);
+            
             if(dataField in data)
                 return data[dataField].toString();
             

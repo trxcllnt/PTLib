@@ -88,11 +88,11 @@ package com.pt.components.controls.itemRenderers
                 
                 if(segment.rendererField in renderer)
                 {
-                    renderer[segment.rendererField] = segment.dataFunction(data);
+                    renderer[segment.rendererField] = segment.applyData(data);
                 }
                 else if('data' in renderer)
                 {
-                    renderer['data'] = segment.dataFunction(data);
+                    renderer['data'] = segment.applyData(data);
                 }
             }
         }
@@ -209,68 +209,69 @@ package com.pt.components.controls.itemRenderers
         {
             super.updateDisplayList(w, h);
             
-            if(segmentsChanged)
+            //Maybe only do this when the segments change?
+//            if(segmentsChanged)
+//            {
+            var segment:DataGridSegment;
+            var segmentSize:Number;
+            var n:int = segments.length;
+            var renderer:DisplayObject;
+            var aggregate:Number = 0;
+            
+            var bgSize:Rectangle = new Rectangle();
+            
+            var pos:Point = new Point();
+            var size:Point = new Point();
+            var sizeProp:String = isV() ? 'height' : 'width';
+            var offProp:String = isV() ? 'width' : 'height';
+            
+            for(var i:int = 0; i < n; i++)
             {
-                var segment:DataGridSegment;
-                var segmentSize:Number;
-                var n:int = segments.length;
-                var renderer:DisplayObject;
-                var aggregate:Number = 0;
+                segment = segments[i];
                 
-                var bgSize:Rectangle = new Rectangle();
+                renderer = getChildAt(i);
                 
-                var pos:Point = new Point();
-                var size:Point = new Point();
-                var sizeProp:String = isV() ? 'height' : 'width';
-                var offProp:String = isV() ? 'width' : 'height';
+                segmentSize = segment.size || segment.measuredSize;
                 
-                for(var i:int = 0; i < n; i++)
+                if(i == 0)
                 {
-                    segment = segments[i];
+                    bgRect.x = segment.position.x;
+                    bgRect.y = segment.position.y;
+                    bgRect.width = w + (isV() ? segmentSize : w);
+                    bgRect.height = h + (isV() ? h : segmentSize);
+                }
+                
+                pos.x = segment.position.x;
+                pos.y = segment.position.y;
+                
+                if(isV())
+                {
+                    size.x = w;
+                    size.y = segmentSize;
+                }
+                else
+                {
+                    size.x = segmentSize;
+                    size.y = h;
+                }
+                
+                if(renderer is IUIComponent)
+                {
                     
-                    renderer = getChildAt(i);
-                    
-                    segmentSize = segment.size || segment.measuredSize;
-                    
-                    if(i == 0)
-                    {
-                        bgRect.x = segment.position.x;
-                        bgRect.y = segment.position.y;
-                        bgRect.width = w + (isV() ? segmentSize : w);
-                        bgRect.height = h + (isV() ? h : segmentSize);
-                    }
-                    
-                    pos.x = segment.position.x;
-                    pos.y = segment.position.y;
-                    
-                    if(isV())
-                    {
-                        size.x = w;
-                        size.y = segmentSize;
-                    }
-                    else
-                    {
-                        size.x = segmentSize;
-                        size.y = h;
-                    }
-                    
-                    if(renderer is IUIComponent)
-                    {
-                        
-                        IUIComponent(renderer).setActualSize(Math.min(size.x, IUIComponent(renderer).getExplicitOrMeasuredWidth()),
-                                                             Math.min(size.y, IUIComponent(renderer).getExplicitOrMeasuredHeight()));
-                        IUIComponent(renderer).move(pos.x + Math.max((size.x - renderer.width) / 2, 0),
-                                                    pos.y + Math.max((size.y - renderer.height) / 2, 0));
-                    }
-                    else
-                    {
-                        renderer.width = size.x;
-                        renderer.height = size.y;
-                        renderer.x = pos.x + Math.max((size.x - renderer.width) / 2, 0);
-                        renderer.y = pos.y + Math.max((size.y - renderer.height) / 2, 0);
-                    }
+                    IUIComponent(renderer).setActualSize(Math.min(size.x, IUIComponent(renderer).getExplicitOrMeasuredWidth()),
+                                                         Math.min(size.y, IUIComponent(renderer).getExplicitOrMeasuredHeight()));
+                    IUIComponent(renderer).move(pos.x + Math.max((size.x - renderer.width) / 2, 0),
+                                                pos.y + Math.max((size.y - renderer.height) / 2, 0));
+                }
+                else
+                {
+                    renderer.width = size.x;
+                    renderer.height = size.y;
+                    renderer.x = pos.x + Math.max((size.x - renderer.width) / 2, 0);
+                    renderer.y = pos.y + Math.max((size.y - renderer.height) / 2, 0);
                 }
             }
+//            }
             
             var g:Graphics = graphics;
             g.clear();

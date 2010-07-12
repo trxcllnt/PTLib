@@ -18,12 +18,25 @@ package com.pt.components.controls.grid
             super();
         }
         
+        private var _headerSize:Number;
+        
         public function get headerSize():Number
         {
-            if(header)
-                return isV() ? header.getExplicitOrMeasuredHeight() : header.getExplicitOrMeasuredWidth();
+            var retVal:Number = 0;
             
-            return 0;
+            if(header)
+                retVal = isV() ? header.getExplicitOrMeasuredHeight() : header.getExplicitOrMeasuredWidth();
+            
+            return isNaN(_headerSize) ? retVal : _headerSize;
+        }
+        
+        public function set headerSize(value:Number):void
+        {
+            if(value === _headerSize)
+                return;
+            
+            _headerSize = value;
+            invalidateDisplayList();
         }
         
         protected function isV():Boolean
@@ -340,12 +353,12 @@ package com.pt.components.controls.grid
                 }
             }
             
+            g = gfx.graphics;
+            g.clear();
+            g.lineStyle(1, 0xCCCCCC);
+            
             if(visibleSegments.length)
             {
-                g = gfx.graphics;
-                g.clear();
-                g.lineStyle(1, 0xCCCCCC);
-                
                 var pt:Point;
                 n = visibleSegments.length;
                 
@@ -373,16 +386,24 @@ package com.pt.components.controls.grid
             
             if(isV())
             {
-                header.setActualSize(w, header.getExplicitOrMeasuredHeight());
+                header.setActualSize(w, headerSize);
+                g.moveTo(0, header.height);
+                g.lineTo(w, header.height);
+                
                 list.setActualSize(w, h - header.height);
                 list.move(0, header.height);
             }
             else
             {
-                header.setActualSize(header.getExplicitOrMeasuredWidth(), h);
+                header.setActualSize(headerSize, h);
+                g.moveTo(header.width, 0);
+                g.lineTo(header.width, h);
+                
                 list.setActualSize(w - header.width, h);
                 list.move(header.width, 0);
             }
+            
+            g.drawRect(0, 0, w, h);
             
             newRendererInView.x = 0;
             newRendererInView.y = 0;

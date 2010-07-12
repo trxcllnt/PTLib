@@ -64,6 +64,26 @@ package com.pt.components.controls.grid
             invalidateDisplayList();
         }
         
+        private var _headerSize:Number;
+        
+        public function get headerSize():Number
+        {
+            return _headerSize;
+        }
+        
+        public function set headerSize(value:Number):void
+        {
+            if(value === _headerSize)
+                return;
+            
+            _headerSize = value;
+            
+            if(container)
+                container.headerSize = headerSize;
+            
+            invalidateDisplayList();
+        }
+        
         private var _itemSize:Number = NaN;
         
         public function get itemSize():Number
@@ -143,6 +163,7 @@ package com.pt.components.controls.grid
             
             container.direction = direction;
             container.dataProvider = dataProvider;
+            container.headerSize = headerSize;
             container.segments = segments;
             container.itemSize = itemSize;
             container.variableItemSize = variableItemSize;
