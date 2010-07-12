@@ -64,6 +64,53 @@ package com.pt.components.controls.grid
             invalidateDisplayList();
         }
         
+        private var _itemSize:Number = NaN;
+        
+        public function get itemSize():Number
+        {
+            return _itemSize;
+        }
+        
+        public function set itemSize(value:Number):void
+        {
+            if(value === _itemSize)
+                return;
+            
+            _itemSize = value;
+            if(isNaN(value))
+                variableItemSize = true;
+            
+            if(container)
+                container.itemSize = itemSize;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        private var _variableItemSize:Boolean = false;
+        
+        public function get variableItemSize():Boolean
+        {
+            return _variableItemSize;
+        }
+        
+        public function set variableItemSize(value:Boolean):void
+        {
+            if(_variableItemSize === value)
+                return;
+            
+            _variableItemSize = value;
+            
+            if(variableItemSize == false && isNaN(itemSize))
+                _itemSize = 25;
+            
+            if(container)
+                container.variableItemSize = variableItemSize;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
         protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
         
         public function get segments():Vector.<DataGridSegment>
@@ -97,6 +144,8 @@ package com.pt.components.controls.grid
             container.direction = direction;
             container.dataProvider = dataProvider;
             container.segments = segments;
+            container.itemSize = itemSize;
+            container.variableItemSize = variableItemSize;
         }
         
         override protected function measure():void

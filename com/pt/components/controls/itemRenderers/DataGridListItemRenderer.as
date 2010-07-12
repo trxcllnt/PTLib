@@ -169,8 +169,10 @@ package com.pt.components.controls.itemRenderers
         
         override protected function measure():void
         {
-            if(isNaN(explicitHeight))
+            if(!isV() && isNaN(explicitHeight))
                 measuredHeight = 30;
+            else if(isV() && isNaN(explicitWidth))
+                measuredWidth = 30;
             
             if(!segmentsChanged)
                 return;

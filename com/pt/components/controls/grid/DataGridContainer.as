@@ -69,9 +69,64 @@ package com.pt.components.controls.grid
             _direction = value;
             
             if(header)
-                header.direction = value;
+                header.direction = segmentDirection;
             if(list)
                 list.direction = value;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        protected function get segmentDirection():String
+        {
+            if(direction == BoxDirection.HORIZONTAL)
+                return BoxDirection.VERTICAL;
+            
+            return BoxDirection.HORIZONTAL;
+        }
+        
+        private var _itemSize:Number = NaN;
+        
+        public function get itemSize():Number
+        {
+            return _itemSize;
+        }
+        
+        public function set itemSize(value:Number):void
+        {
+            if(value === _itemSize)
+                return;
+            
+            _itemSize = value;
+            if(isNaN(value))
+                variableItemSize = true;
+            
+            if(list)
+                list.itemSize = itemSize;
+            
+            invalidateSize();
+            invalidateDisplayList();
+        }
+        
+        private var _variableItemSize:Boolean = false;
+        
+        public function get variableItemSize():Boolean
+        {
+            return _variableItemSize;
+        }
+        
+        public function set variableItemSize(value:Boolean):void
+        {
+            if(_variableItemSize === value)
+                return;
+            
+            _variableItemSize = value;
+            
+            if(variableItemSize == false && isNaN(itemSize))
+                _itemSize = 25;
+            
+            if(list)
+                list.variableItemSize = variableItemSize;
             
             invalidateSize();
             invalidateDisplayList();
@@ -188,11 +243,14 @@ package com.pt.components.controls.grid
             
             header = new DataGridListHeaderRenderer();
             header.segments = segments;
+            header.direction = segmentDirection;
             addChild(header);
             
             list = new DataGridList();
             list.direction = direction;
             list.segments = header.segments;
+            list.itemSize = itemSize;
+            list.variableItemSize = variableItemSize;
             
             addChild(list);
         }
