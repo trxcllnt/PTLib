@@ -7,9 +7,55 @@ package com.pt.components.containers.layout
     
     public class VLayout extends ComponentLayout
     {
-        public function VLayout()
+        
+        override public function measure():void
         {
-            super();
+            var minWidth:Number = 0;
+            var minHeight:Number = 0;
+            
+            var preferredWidth:Number = 0;
+            var preferredHeight:Number = 0;
+            
+            var n:int = target.numChildren;
+            var numChildrenWithOwnSpace:int = n;
+            var child:DisplayObject;
+            var wPref:Number;
+            var hPref:Number
+            
+            for(var i:int = 0; i < n; i++)
+            {
+                child = target.getChildAt(i);
+                
+                if(child is IUIComponent)
+                {
+                    if(!IUIComponent(child).includeInLayout)
+                    {
+                        numChildrenWithOwnSpace--;
+                        continue;
+                    }
+                    
+                    wPref = IUIComponent(child).getExplicitOrMeasuredWidth();
+                    hPref = IUIComponent(child).getExplicitOrMeasuredHeight();
+                    
+                    minWidth = Math.max(!isNaN(IUIComponent(child).percentWidth) ?
+                                        IUIComponent(child).minWidth : wPref, minWidth);
+                    
+                    minHeight += !isNaN(IUIComponent(child).percentHeight) ?
+                        IUIComponent(child).minHeight : hPref;
+                }
+                
+                preferredWidth = Math.max(wPref, preferredWidth);
+                preferredHeight += hPref;
+            }
+            
+            var wPadding:Number = widthPadding(numChildrenWithOwnSpace);
+            var hPadding:Number = heightPadding(numChildrenWithOwnSpace);
+            
+            target.measuredMinWidth = minWidth + wPadding;
+            target.measuredMinHeight = minHeight + hPadding;
+            
+            target.measuredWidth = preferredWidth + wPadding;
+            target.measuredHeight = preferredHeight + hPadding;
         }
         
         override public function updateDisplayList(w:Number, h:Number):void
@@ -67,6 +113,17 @@ package com.pt.components.containers.layout
                     top += obj.height + gap;
                 }
             }
+        }
+        
+        
+        private function widthPadding(numChildren:Number):Number
+        {
+            return (target.getStyle('paddingLeft') + target.getStyle('paddingRight'));
+        }
+        
+        private function heightPadding(numChildren:Number):Number
+        {
+            return (target.getStyle('paddingTop') + target.getStyle('paddingBottom')) + (target.getStyle('verticalGap') * (numChildren - 1));
         }
     }
 }

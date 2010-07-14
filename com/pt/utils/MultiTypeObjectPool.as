@@ -39,7 +39,9 @@ package com.pt.utils
         
         public function checkIn(item:Object):void
         {
-            ObjectPool(pools[item.constructor]).checkIn(item);
+            var type:Class = item.constructor;
+            if(has(type))
+                ObjectPool(pools[type]).checkIn(item);
         }
         
         public function empty():void

@@ -2,15 +2,13 @@ package com.pt.components.controls
 {
     import flash.display.DisplayObject;
     import flash.display.DisplayObjectContainer;
-    import flash.display.Graphics;
-    import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.MouseEvent;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.ui.Mouse;
     
-    import mx.core.IFlexDisplayObject;
+    import mx.controls.scrollClasses.ScrollBar;
     import mx.core.IUIComponent;
     import mx.core.UIComponent;
     import mx.events.ScrollEvent;
@@ -393,11 +391,12 @@ package com.pt.components.controls
                     addChild(topBar);
                 }
                 
-                topBar.rampingThreshold = rampingThreshold;
-                topBar.setScrollProperties(width, 0, totalWidth - width, 0);
-                topBar.setActualSize(barWidth, 16);
-                topBar.move(barX, inset ? 0 : -16);
-                topBar.scrollPosition = horizontalScrollPosition;
+                setScrollBarProperties(topBar,
+                                       rampingThreshold,
+                                       width, 0, totalWidth - width, 0,
+                                       barWidth, 16,
+                                       barX, inset ? 0 : -16,
+                                       horizontalScrollPosition);
             }
             else if(topBar)
             {
@@ -415,11 +414,12 @@ package com.pt.components.controls
                     addChild(bottomBar);
                 }
                 
-                bottomBar.rampingThreshold = rampingThreshold;
-                bottomBar.setScrollProperties(width, 0, totalWidth - width, 0);
-                bottomBar.setActualSize(barWidth, 16);
-                bottomBar.move(barX, inset ? height - 16 : height);
-                bottomBar.scrollPosition = horizontalScrollPosition;
+                setScrollBarProperties(bottomBar,
+                                       rampingThreshold,
+                                       width, 0, totalWidth - width, 0,
+                                       barWidth, 16,
+                                       barX, inset ? height - 16 : height,
+                                       horizontalScrollPosition);
             }
             else if(bottomBar)
             {
@@ -460,11 +460,12 @@ package com.pt.components.controls
                     addChild(leftBar);
                 }
                 
-                leftBar.rampingThreshold = rampingThreshold;
-                leftBar.setScrollProperties(height, 0, totalHeight - height, 0);
-                leftBar.setActualSize(16, barHeight);
-                leftBar.move(inset ? 0 : -16, barY);
-                leftBar.scrollPosition = verticalScrollPosition;
+                setScrollBarProperties(leftBar,
+                                       rampingThreshold,
+                                       height, 0, totalHeight - height, 0,
+                                       16, barHeight,
+                                       inset ? 0 : -16, barY,
+                                       verticalScrollPosition);
             }
             else if(leftBar)
             {
@@ -483,11 +484,12 @@ package com.pt.components.controls
                     addChild(rightBar);
                 }
                 
-                rightBar.rampingThreshold = rampingThreshold;
-                rightBar.setScrollProperties(height, 0, totalHeight - height, 0);
-                rightBar.setActualSize(16, barHeight);
-                rightBar.move(inset ? width - 16 : width, barY);
-                rightBar.scrollPosition = verticalScrollPosition;
+                setScrollBarProperties(rightBar,
+                                       rampingThreshold,
+                                       height, 0, totalHeight - height, 0,
+                                       16, barHeight,
+                                       inset ? width - 16 : width, barY,
+                                       verticalScrollPosition);
             }
             else if(rightBar)
             {
@@ -497,6 +499,23 @@ package com.pt.components.controls
             }
             
             return barCreated;
+        }
+        
+        
+        protected function setScrollBarProperties(scrollBar:ScrollBar,
+                                                  ramping:Number,
+                                                  pageSize:Number, minScrollPosition:Number, maxScrollPosition:Number, pageScrollSize:Number,
+                                                  barWidth:Number, barHeight:Number,
+                                                  barX:Number, barY:Number,
+                                                  scrollPosition:Number):void
+        {
+            if('rampingThreshold' in scrollBar)
+                scrollBar['rampingThreshold'] = ramping;
+            
+            scrollBar.setScrollProperties(pageSize, minScrollPosition, maxScrollPosition, pageScrollSize);
+            scrollBar.setActualSize(barWidth, barHeight);
+            scrollBar.move(barX, barY);
+            scrollBar.scrollPosition = scrollPosition;
         }
         
         protected function horizontalScrollHandler(event:ScrollEvent):void

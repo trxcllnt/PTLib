@@ -2,10 +2,9 @@ package com.pt.components.controls.grid
 {
     import com.pt.components.controls.DataList;
     import com.pt.components.controls.itemRenderers.DataGridListItemRenderer;
+    import com.pt.components.controls.itemRenderers.DataGridListSegmentRenderer;
     
     import flash.display.DisplayObject;
-    import flash.display.Graphics;
-    import flash.display.Shape;
     
     import mx.containers.BoxDirection;
     import mx.core.ClassFactory;
@@ -56,11 +55,13 @@ package com.pt.components.controls.grid
         
         override protected function setRendererData(renderer:DisplayObject, data:Object, index:int):void
         {
-            if(renderer is DataGridListItemRenderer)
+            if(renderer is DataGridListSegmentRenderer)
             {
-                DataGridListItemRenderer(renderer).index = index;
-                DataGridListItemRenderer(renderer).direction = segmentDirection;
-                DataGridListItemRenderer(renderer).segments = segments;
+                DataGridListSegmentRenderer(renderer).direction = segmentDirection;
+                DataGridListSegmentRenderer(renderer).segments = segments;
+                
+                if(renderer is DataGridListItemRenderer)
+                    DataGridListItemRenderer(renderer).index = index;
             }
             
             super.setRendererData(renderer, data, index);

@@ -5,6 +5,7 @@ package com.pt.components.controls.grid
     import flash.display.DisplayObject;
     
     import mx.containers.BoxDirection;
+    import mx.controls.scrollClasses.ScrollBar;
     import mx.core.IUIComponent;
     
     public class DataGrid extends Scroller
@@ -62,6 +63,11 @@ package com.pt.components.controls.grid
             
             invalidateSize();
             invalidateDisplayList();
+        }
+        
+        protected function isV():Boolean
+        {
+            return direction == BoxDirection.VERTICAL;
         }
         
         private var _headerSize:Number;
@@ -175,6 +181,52 @@ package com.pt.components.controls.grid
             
             measuredWidth = explicitWidth || 400;
             measuredHeight = explicitHeight || 250;
+        }
+        
+        override protected function updateDisplayList(w:Number, h:Number):void
+        {
+            if(w <= 0 || h <= 0)
+            {
+                w = w || parent.width;
+                h = h || parent.height;
+                setActualSize(w, h);
+            }
+            
+            if(target)
+            {
+                sizeTarget(target);
+                
+                configureHorizontalScrollBar(w, h, targetWidth);
+                configureVerticalScrollBar(h, w, targetHeight);
+                
+                positionTarget(target);
+            }
+        }
+        
+        override protected function setScrollBarProperties(scrollBar:ScrollBar,
+                                                           ramping:Number,
+                                                           pageSize:Number, minScrollPosition:Number, maxScrollPosition:Number, pageScrollSize:Number,
+                                                           barWidth:Number, barHeight:Number,
+                                                           barX:Number, barY:Number,
+                                                           scrollPosition:Number):void
+        {
+            if(isV() && (scrollBar == leftBar || scrollBar == rightBar))
+            {
+                barY += container.headerSize;
+                barHeight -= container.headerSize;
+            }
+            else if(!isV() && (scrollBar == topBar || scrollBar == bottomBar))
+            {
+                barX += container.headerSize;
+                barWidth -= container.headerSize;
+            }
+            
+            super.setScrollBarProperties(scrollBar,
+                                         ramping,
+                                         pageSize, minScrollPosition, maxScrollPosition, pageScrollSize,
+                                         barWidth, barHeight,
+                                         barX, barY,
+                                         scrollPosition);
         }
     }
 }

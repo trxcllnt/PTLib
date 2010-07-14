@@ -10,7 +10,38 @@ package com.pt.components.controls.grid
         public var size:Number = NaN;
         public var measuredSize:Number = 0;
         
-        public var position:Point = new Point();
+        public var selected:Boolean = false;
+        
+        public function getRelativePosition():Point
+        {
+            var pt:Point = position.clone();
+            if(parent)
+            {
+                pt.x -= parent.position.x;
+                pt.y -= parent.position.y;
+            }
+            
+            return pt;
+        }
+        
+        protected var pos:Point = new Point();
+        
+        public function get position():Point
+        {
+            return pos;
+        }
+        
+        public function set position(value:Point):void
+        {
+            if(value === pos)
+                return;
+            
+            pos = value;
+        }
+        
+        protected var _parent:DataGridSegmentGroup;
+        
+        public var parent:DataGridSegmentGroup;
         
         public var rendererField:String;
         public var headerField:String;
@@ -18,9 +49,10 @@ package com.pt.components.controls.grid
         public var dataField:String;
         public var dataFunction:Function;
         
-        public var title:String;
+        public var sortField:String;
+        public var sortFunction:Function;
         
-        public var children:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
+        public var title:String;
         
         private var _header:IFactory;
         
@@ -52,13 +84,13 @@ package com.pt.components.controls.grid
             item = factory;
         }
         
-        public function applyData(data:*):String
+        public function applyData(data:*):*
         {
             if(dataFunction != null)
                 return dataFunction(data);
             
-            if(dataField in data)
-                return data[dataField].toString();
+            if(data && dataField in data)
+                return data[dataField];
             
             return "";
         }

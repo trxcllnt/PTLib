@@ -210,6 +210,8 @@ package com.pt.virtual
         {
             list.clear();
             _size = 0;
+            _length = 0;
+            index = new Dictionary(false);
             map = new Dictionary(false);
         }
         

@@ -1,6 +1,7 @@
 package com.pt.components.controls.itemRenderers
 {
     import com.pt.components.controls.grid.DataGridSegment;
+    import com.pt.components.controls.grid.DataGridSegmentGroup;
     
     import flash.display.DisplayObject;
     import flash.display.DisplayObjectContainer;
@@ -8,83 +9,35 @@ package com.pt.components.controls.itemRenderers
     import mx.core.ClassFactory;
     import mx.core.IFactory;
     
-    public class DataGridListHeaderRenderer extends DataGridListItemRenderer
+    public class DataGridListHeaderRenderer extends DataGridListSegmentRenderer
     {
-        public function DataGridListHeaderRenderer()
-        {
-            super();
-        }
-        
-        private var _computedSegments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
-        
-        public function get computedSegments():Vector.<DataGridSegment>
-        {
-            return _computedSegments;
-        }
-        
         override public function set segments(value:Vector.<DataGridSegment>):void
         {
-            if(value != segments)
-                _computedSegments = new Vector.<DataGridSegment>();
+            if(value !== _segments)
+                while(numChildren)
+                    removeChildAt(0);
             
             super.segments = value;
         }
         
-        override protected function setData(data:Object):void
-        {
-            var segment:DataGridSegment;
-            var renderer:DisplayObject;
-            var n:int = segments.length;
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                segment = segments[i];
-                renderer = getChildAt(i);
-                
-                processSegment(segment, renderer);
-            }
-        }
-        
-        private function processSegment(segment:DataGridSegment, renderer:DisplayObject):void
+        override protected function commitRendererData(renderer:DisplayObject, segment:DataGridSegment):void
         {
             if(segment.headerField && segment.headerField in renderer)
-            {
                 renderer[segment.headerField] = segment.title;
-            }
             else if('data' in renderer)
-            {
                 renderer['data'] = segment.title;
-            }
+            if('segment' in renderer)
+                renderer['segment'] = segment;
             
-            var n:int = segment.children.length;
-            if(n && renderer is DisplayObjectContainer)
+            if(segment is DataGridSegmentGroup && renderer is DisplayObjectContainer)
             {
-                for(var i:int = 0; i < n; i++)
-                {
-                    processSegment(segment.children[i], DisplayObjectContainer(renderer).getChildAt(i));
-                }
+                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
+                commitSegmentData(children, DisplayObjectContainer(renderer));
             }
         }
         
-        override protected function createSegmentRenderers():void
+        override protected function createSegmentRenderer(segment:DataGridSegment, index:int, rendererParent:DisplayObjectContainer):DisplayObject
         {
-            var n:int = segments.length;
-            var segment:DataGridSegment;
-            
-            for(var i:int = 0; i < n; ++i)
-            {
-                createSegmentRenderer(segments[i], i, this);
-            }
-            while(numChildren > n)
-            {
-                pool.checkIn(removeChildAt(numChildren - 1));
-            }
-        }
-        
-        private function createSegmentRenderer(segment:DataGridSegment, index:int, p:DisplayObjectContainer):void
-        {
-            _computedSegments.push(segment);
-            
             var renderer:DisplayObject;
             var factory:IFactory = segment.header;
             var type:Class;
@@ -97,41 +50,33 @@ package com.pt.components.controls.itemRenderers
             if(!pool.has(type))
                 pool.add(type, factory);
             
-            renderer = index < p.numChildren ?
-                p.getChildAt(index) :
+            renderer = index < rendererParent.numChildren ?
+                rendererParent.getChildAt(index) :
                 DisplayObject(pool.checkOut(type));
             
             if(!(renderer is type))
             {
-                if(contains(renderer))
+                if(rendererParent.contains(renderer))
                 {
-                    pool.checkIn(p.removeChild(renderer));
+                    pool.checkIn(rendererParent.removeChild(renderer));
                 }
                 renderer = DisplayObject(pool.checkOut(type));
             }
             
-            if(p.contains(renderer) == false)
-                p.addChildAt(renderer, index);
+            if(!rendererParent.contains(renderer))
+                rendererParent.addChildAt(renderer, index);
             
             if(!isNaN(segment.size))
             {
                 renderer[isV() ? 'height' : 'width'] = segment.size;
             }
             
-            var n:int = segment.children.length;
-            if(n && renderer is DisplayObjectContainer)
+            if(segment is DataGridSegmentGroup && renderer is DisplayObjectContainer)
             {
-                p = DisplayObjectContainer(renderer);
-                
-                for(var i:int = 0; i < n; ++i)
-                {
-                    createSegmentRenderer(segment.children[i], i, p);
-                }
-                while(p.numChildren > n)
-                {
-                    pool.checkIn(p.removeChildAt(p.numChildren - 1));
-                }
+                createSegmentRenderers(DataGridSegmentGroup(segment).children, DisplayObjectContainer(renderer));
             }
+            
+            return renderer;
         }
     }
 }
