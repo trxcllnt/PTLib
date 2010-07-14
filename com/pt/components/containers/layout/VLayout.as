@@ -4,6 +4,7 @@ package com.pt.components.containers.layout
     
     import mx.core.IChildList;
     import mx.core.IUIComponent;
+    import mx.styles.IStyleClient;
     
     public class VLayout extends ComponentLayout
     {
@@ -51,11 +52,14 @@ package com.pt.components.containers.layout
             var wPadding:Number = widthPadding(numChildrenWithOwnSpace);
             var hPadding:Number = heightPadding(numChildrenWithOwnSpace);
             
-            target.measuredMinWidth = minWidth + wPadding;
-            target.measuredMinHeight = minHeight + hPadding;
-            
-            target.measuredWidth = preferredWidth + wPadding;
-            target.measuredHeight = preferredHeight + hPadding;
+            if(target is IUIComponent)
+            {
+                IUIComponent(target).measuredMinWidth = minWidth + wPadding;
+                IUIComponent(target).measuredMinHeight = minHeight + hPadding;
+                
+                target['measuredWidth'] = preferredWidth + wPadding;
+                target['measuredHeight'] = preferredHeight + hPadding;
+            }
         }
         
         override public function updateDisplayList(w:Number, h:Number):void
@@ -71,7 +75,7 @@ package com.pt.components.containers.layout
             }
             
             var childList:IChildList = new ArrayChildList(children);
-            var gap:Number = target.getStyle("horizontalGap");
+            var gap:Number = target is IStyleClient ? IStyleClient(target).getStyle("horizontalGap") : 0;
             
             var numChildrenWithOwnSpace:int = n;
             var obj:DisplayObject;
@@ -87,8 +91,8 @@ package com.pt.components.containers.layout
             // stretch everything as needed including heights
             var excessSpace:Number = Flex.flexChildHeightsProportionally(childList, w - (numChildrenWithOwnSpace - 1) * gap, h);
             
-            var paddingLeft:Number = target.getStyle("paddingLeft");
-            var paddingTop:Number = target.getStyle("paddingTop");
+            var paddingLeft:Number = target is IStyleClient ? IStyleClient(target).getStyle("paddingLeft") : 0;
+            var paddingTop:Number = target is IStyleClient ? IStyleClient(target).getStyle("paddingTop") : 0;
             var horizontalAlign:Number = getHorizontalAlignValue();
             var verticalAlign:Number = getVerticalAlignValue();
             
@@ -118,12 +122,13 @@ package com.pt.components.containers.layout
         
         private function widthPadding(numChildren:Number):Number
         {
-            return (target.getStyle('paddingLeft') + target.getStyle('paddingRight'));
+            return ((target is IStyleClient ? IStyleClient(target).getStyle('paddingLeft') : 0) + (target is IStyleClient ? IStyleClient(target).getStyle('paddingRight') : 0));
         }
         
         private function heightPadding(numChildren:Number):Number
         {
-            return (target.getStyle('paddingTop') + target.getStyle('paddingBottom')) + (target.getStyle('verticalGap') * (numChildren - 1));
+            return ((target is IStyleClient ? IStyleClient(target).getStyle('paddingTop') : 0) + (target is IStyleClient ? IStyleClient(target).getStyle('paddingBottom') : 0))
+                + ((target is IStyleClient ? IStyleClient(target).getStyle('verticalGap') : 0) * (numChildren - 1));
         }
     }
 }

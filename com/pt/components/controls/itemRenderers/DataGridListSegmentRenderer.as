@@ -53,7 +53,6 @@ package com.pt.components.controls.itemRenderers
         }
         
         private var _data:Object;
-        private var dataChanged:Boolean = false;
         
         public function get data():Object
         {
@@ -66,9 +65,10 @@ package com.pt.components.controls.itemRenderers
                 return;
             
             _data = value;
-            dataChanged = true;
             
-            invalidateProperties();
+            if(segments.length && numChildren)
+                commitSegmentData(segments, this);
+            
             invalidateSize();
             invalidateDisplayList();
         }
@@ -98,19 +98,12 @@ package com.pt.components.controls.itemRenderers
             if(_segments.length)
             {
                 segmentsChanged = true;
-                invalidateProperties();
+                
+                if(data)
+                    commitSegmentData(segments, this);
+                
                 invalidateSize();
                 invalidateDisplayList();
-            }
-        }
-        
-        override protected function commitProperties():void
-        {
-            super.commitProperties();
-            
-            if(segmentsChanged || dataChanged)
-            {
-                commitSegmentData(segments, this);
             }
         }
         
@@ -154,6 +147,13 @@ package com.pt.components.controls.itemRenderers
                     pool.checkIn(rendererParent.removeChild(renderer));
                 }
                 renderer = DisplayObject(pool.checkOut(type));
+            }
+            
+            if(factory is ClassFactory)
+            {
+                var props:Object = ClassFactory(factory).properties;
+                for(var prop:String in props)
+                    renderer[prop] = props[prop];
             }
             
             if(!rendererParent.contains(renderer))

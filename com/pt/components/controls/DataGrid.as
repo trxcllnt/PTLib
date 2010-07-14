@@ -1,12 +1,15 @@
-package com.pt.components.controls.grid
+package com.pt.components.controls
 {
-    import com.pt.components.controls.Scroller;
     
     import flash.display.DisplayObject;
+    import flash.geom.Point;
     
     import mx.containers.BoxDirection;
     import mx.controls.scrollClasses.ScrollBar;
     import mx.core.IUIComponent;
+    import mx.events.ScrollEvent;
+    import com.pt.components.controls.grid.DataGridContainer;
+    import com.pt.components.controls.grid.DataGridSegment;
     
     public class DataGrid extends Scroller
     {
@@ -37,6 +40,9 @@ package com.pt.components.controls.grid
             
             if(container)
                 container.dataProvider = dataProvider;
+            
+            horizontalScrollPosition = 0;
+            verticalScrollPosition = 0;
             
             invalidateSize();
             invalidateDisplayList();
@@ -203,6 +209,39 @@ package com.pt.components.controls.grid
             }
         }
         
+        override protected function sizeTarget(target:DisplayObject):void
+        {
+            if(!(target is IUIComponent))
+                return;
+            
+            var cw:Number = 0;
+            var ch:Number = 0;
+            
+            if(isVirtual)
+            {
+                cw = unscaledWidth;
+                ch = unscaledHeight;
+            }
+            else
+            {
+                if(!isNaN(IUIComponent(target).percentWidth))
+                    cw = unscaledWidth;
+                else
+                    cw = IUIComponent(target).getExplicitOrMeasuredWidth();
+                if(!isNaN(IUIComponent(target).percentHeight))
+                    ch = unscaledHeight;
+                else
+                    ch = IUIComponent(target).getExplicitOrMeasuredHeight();
+            }
+            
+            cw -= (isV() && hasVertical && hasRight) ? 16 : 0;
+            cw -= (isV() && hasVertical && hasLeft) ? 16 : 0;
+            ch -= (!isV() && hasHorizontal && hasBottom) ? 16 : 0;
+            ch -= (!isV() && hasHorizontal && hasTop) ? 16 : 0;
+            
+            IUIComponent(target).setActualSize(cw, ch);
+        }
+        
         override protected function setScrollBarProperties(scrollBar:ScrollBar,
                                                            ramping:Number,
                                                            pageSize:Number, minScrollPosition:Number, maxScrollPosition:Number, pageScrollSize:Number,
@@ -210,15 +249,29 @@ package com.pt.components.controls.grid
                                                            barX:Number, barY:Number,
                                                            scrollPosition:Number):void
         {
-            if(isV() && (scrollBar == leftBar || scrollBar == rightBar))
+            if((scrollBar == leftBar || scrollBar == rightBar))
             {
-                barY += container.headerSize;
-                barHeight -= container.headerSize;
+                if(isV())
+                {
+                    barY += container.headerSize;
+                    barHeight -= container.headerSize;
+                }
+                if(!hasTop)
+                    barX -= 16;
+                if(hasHorizontal && hasBottom)
+                    barHeight -= 16;
             }
-            else if(!isV() && (scrollBar == topBar || scrollBar == bottomBar))
+            else if(scrollBar == topBar || scrollBar == bottomBar)
             {
-                barX += container.headerSize;
-                barWidth -= container.headerSize;
+                if(!isV())
+                {
+                    barX += container.headerSize;
+                    barWidth -= container.headerSize;
+                }
+                if(!hasLeft)
+                    barY -= 16;
+                if(hasVertical && hasRight)
+                    barWidth -= 16;
             }
             
             super.setScrollBarProperties(scrollBar,

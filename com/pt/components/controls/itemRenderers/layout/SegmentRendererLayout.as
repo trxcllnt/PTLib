@@ -54,14 +54,13 @@ package com.pt.components.controls.itemRenderers.layout
             var segment:DataGridSegment;
             var segmentSize:Number;
             
-            
             for(i = 0; i < n; i++)
             {
                 segment = segments[i];
                 
                 r = target.getChildAt(i);
                 
-                segmentSize = segment.size || segment.measuredSize;
+                segmentSize = segment.size || 0;
                 
                 pos = segment.getRelativePosition();
                 

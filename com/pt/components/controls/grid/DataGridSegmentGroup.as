@@ -1,9 +1,18 @@
 package com.pt.components.controls.grid
 {
+    import com.pt.components.controls.itemRenderers.DataGridListSegmentRenderer;
+    
     import flash.geom.Point;
+    
+    import mx.core.ClassFactory;
 
     public class DataGridSegmentGroup extends DataGridSegment
     {
+        public function DataGridSegmentGroup()
+        {
+            renderer = new ClassFactory(DataGridListSegmentRenderer);
+        }
+        
         private var kids:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
         
         public function get children():Vector.<DataGridSegment>

@@ -25,7 +25,7 @@ package com.pt.components.controls.itemRenderers
                 return;
             
             _index = value;
-            invalidateDisplayList();
+//            invalidateDisplayList();
         }
         
         override protected function commitRendererData(renderer:DisplayObject, segment:DataGridSegment):void
@@ -50,8 +50,8 @@ package com.pt.components.controls.itemRenderers
                 var lPos:Point = last.position;
                 
                 bgRect = new Rectangle(fPos.x, fPos.y,
-                    lPos.x + (isV() ? w : last.size), 
-                    lPos.y + (isV() ? last.size : h));
+                    lPos.x + (isV() ? w : (last.size || 0)), 
+                    lPos.y + (isV() ? (last.size || 0) : h));
             }
             else
             {

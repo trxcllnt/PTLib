@@ -1,6 +1,11 @@
 package com.pt.components.containers.layout
 {
+    import flash.display.Sprite;
+    
+    import mx.core.IInvalidating;
+    import mx.core.IUIComponent;
     import mx.core.UIComponent;
+    import mx.styles.IStyleClient;
 
     public class ComponentLayout
     {
@@ -8,21 +13,24 @@ package com.pt.components.containers.layout
         {
         }
         
-        private var _target:UIComponent;
+        private var _target:Sprite;
         
-        public function get target():UIComponent
+        public function get target():Sprite
         {
             return _target;
         }
         
-        public function set target(value:UIComponent):void
+        public function set target(value:Sprite):void
         {
             if(value === _target)
                 return;
             
             _target = value;
-            target.invalidateSize();
-            target.invalidateDisplayList();
+            if(target is IInvalidating)
+            {
+                IInvalidating(target).invalidateSize();
+                IInvalidating(target).invalidateDisplayList();
+            }
         }
         
         public function measure():void
@@ -35,7 +43,10 @@ package com.pt.components.containers.layout
         
         protected function getHorizontalAlignValue():Number
         {
-            var horizontalAlign:String = target.getStyle("horizontalAlign");
+            if(!(target is IStyleClient))
+                return 0;
+            
+            var horizontalAlign:String = IStyleClient(target).getStyle("horizontalAlign");
             
             if (horizontalAlign == "center")
                 return 0.5;
@@ -49,7 +60,10 @@ package com.pt.components.containers.layout
         
         protected function getVerticalAlignValue():Number
         {
-            var verticalAlign:String = target.getStyle("verticalAlign");
+            if(!(target is IStyleClient))
+                return 0;
+            
+            var verticalAlign:String = IStyleClient(target).getStyle("verticalAlign");
             
             if (verticalAlign == "middle")
                 return 0.5;

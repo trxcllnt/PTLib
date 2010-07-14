@@ -13,7 +13,14 @@ package com.pt.components.controls.itemRenderers
     {
         override public function set segments(value:Vector.<DataGridSegment>):void
         {
+            var hasGroups:Boolean = false
             if(value !== _segments)
+            {
+                var i:int = -1;
+                while(++i < numChildren && !hasGroups)
+                    hasGroups = (getChildAt(i) is SegmentHeaderGroupRenderer);
+            }
+            if(hasGroups)
                 while(numChildren)
                     removeChildAt(0);
             
@@ -23,9 +30,10 @@ package com.pt.components.controls.itemRenderers
         override protected function commitRendererData(renderer:DisplayObject, segment:DataGridSegment):void
         {
             if(segment.headerField && segment.headerField in renderer)
-                renderer[segment.headerField] = segment.title;
+                renderer[segment.headerField] = segment.applyTitle(data);
             else if('data' in renderer)
-                renderer['data'] = segment.title;
+                renderer['data'] = segment.applyTitle(data);
+            
             if('segment' in renderer)
                 renderer['segment'] = segment;
             
@@ -61,6 +69,13 @@ package com.pt.components.controls.itemRenderers
                     pool.checkIn(rendererParent.removeChild(renderer));
                 }
                 renderer = DisplayObject(pool.checkOut(type));
+            }
+            
+            if(factory is ClassFactory)
+            {
+                var props:Object = ClassFactory(factory).properties;
+                for(var prop:String in props)
+                    renderer[prop] = props[prop];
             }
             
             if(!rendererParent.contains(renderer))

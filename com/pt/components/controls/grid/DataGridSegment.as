@@ -9,6 +9,9 @@ package com.pt.components.controls.grid
     {
         public var size:Number = NaN;
         public var measuredSize:Number = 0;
+        public var percentSize:Number = NaN;
+        public var minSize:Number = 25;
+        public var maxSize:Number = 1000;
         
         public var selected:Boolean = false;
         
@@ -45,6 +48,8 @@ package com.pt.components.controls.grid
         
         public var rendererField:String;
         public var headerField:String;
+        
+        public var titleFunction:Function;
         
         public var dataField:String;
         public var dataFunction:Function;
@@ -92,7 +97,21 @@ package com.pt.components.controls.grid
             if(data && dataField in data)
                 return data[dataField];
             
+            if(data)
+                return data;
+            
             return "";
+        }
+        
+        public function applyTitle(data:*):*
+        {
+            if(titleFunction != null)
+                return titleFunction(data);
+            
+            if(title)
+                return title;
+            
+            return data;
         }
     }
 }

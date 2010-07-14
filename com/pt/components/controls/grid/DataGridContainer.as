@@ -298,11 +298,7 @@ package com.pt.components.controls.grid
                 
                 for(var i:int = 0; i < n; i++)
                 {
-                    segment = segments[i];
-                    
-                    measureSegment(segment);
-                    
-                    segmentDimension.add(segment, segment.size);
+                    measureSegment(segments[i]);
                 }
             }
             
@@ -317,32 +313,8 @@ package com.pt.components.controls.grid
                 measuredHeight = segmentDimension.size;
             }
             
-            if(segmentsChanged)
-                processSegments();
-        }
-        
-        private function measureSegment(segment:DataGridSegment):void
-        {
-            if(segment is DataGridSegmentGroup)
-            {
-                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
-                var n:int = children.length;
-                var size:Number = 0;
-                for(var i:int = 0; i < n; i++)
-                {
-                    measureSegment(children[i]);
-                    size += children[i].size;
-                }
-                
-                segment.size = size;
-            }
-            else
-            {
-                if(isNaN(segment.size))
-                {
-                    segment.size = segment.measuredSize;
-                }
-            }
+            measuredWidth += 16;
+            measuredHeight += 16;
         }
         
         protected var scrollDelta:Vector.<Point> = Vector.<Point>([new Point(), new Point()]);
@@ -361,15 +333,58 @@ package com.pt.components.controls.grid
             g.drawRect(0, 0, w, h);
             
             var i:int;
+            var segment:DataGridSegment;
             if(segmentsChanged)
             {
                 var n:int = segments.length;
-                var c:Number = 0;
+                var pTotal:Number = 0;
+                var usedSpace:Number = 0;
                 
                 for(i = 0; i < n; i++)
                 {
-                    c = positionSegment(segments[i], c);
+                    segment = segments[i];
+                    if(isNaN(segment.percentSize))
+                    {
+                        segment.size = Math.min(Math.max(segment.measuredSize, segment.minSize), segment.maxSize);
+                        usedSpace += segment.size;
+                    }
+                    else
+                    {
+                        pTotal += segment.percentSize;
+                    }
                 }
+                
+                var spacePerCent:Number = (w - usedSpace) / Math.max(pTotal, 100);
+                var sPer:Number = 0;
+                    
+                var c:Number = 0;
+                var minSize:Number = 0;
+                
+                for(i = 0; i < n; i++)
+                {
+                    segment = segments[i];
+                    
+                    if(!isNaN(segment.percentSize))
+                    {
+                        sPer = segment.percentSize * spacePerCent;
+                        if(sPer > segment.maxSize)
+                        {
+                            usedSpace += segment.maxSize;
+                            pTotal -= (sPer / spacePerCent);
+                        }
+                        spacePerCent = (w - usedSpace) / Math.max(pTotal, 100);
+                    }
+                    
+                    minSize = sizeSegment(segment, w - usedSpace, spacePerCent);
+                    segment.size = Math.max(segment.size, minSize);
+                    
+                    segmentDimension.add(segment, segment.size);
+                    
+                    c = positionSegment(segment, c);
+                }
+                
+                processSegments();
+                invalidateSize();
             }
             
             g = gfx.graphics;
@@ -381,7 +396,7 @@ package com.pt.components.controls.grid
                 drawSegmentPartitions(visibleSegments);
                 
                 var scrollIndex:int = isV() ? 1 : 0;
-                var segment:DataGridSegment = visibleSegments[0];
+                segment = visibleSegments[0];
                 scrollDelta[scrollIndex].x = segmentDimension.getPosition(segment);
                 segment = visibleSegments[visibleSegments.length - 1];
                 scrollDelta[scrollIndex].y = segmentDimension.getPosition(segment) + segmentDimension.getSize(segment);
@@ -413,6 +428,118 @@ package com.pt.components.controls.grid
             segmentsChanged = false;
         }
         
+        private function measureSegment(segment:DataGridSegment):void
+        {
+            if(segment is DataGridSegmentGroup)
+            {
+                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
+                var n:int = children.length;
+                var size:Number = 0;
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    measureSegment(children[i]);
+                    size += children[i].measuredSize;
+                }
+                
+                segment.measuredSize = size;
+            }
+            else
+            {
+                segment.measuredSize = Math.min(Math.max(segment.measuredSize, segment.minSize), segment.maxSize);
+            }
+        }
+        
+        private function sizeSegment(segment:DataGridSegment, totalSpace:Number, spacePerCent:Number):Number
+        {
+            if(isNaN(segment.size))
+            {
+                if(!isNaN(segment.percentSize))
+                    segment.size = segment.percentSize * spacePerCent;
+                else
+                    segment.size = segment.measuredSize;
+            }
+            
+            segment.size = Math.min(Math.max(segment.size, segment.minSize), segment.maxSize);
+            
+            if(segment is DataGridSegmentGroup)
+            {
+                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
+                var n:int = children.length;
+                
+                var pTotal:Number = 0;
+                var usedSpace:Number = 0;
+                var s:DataGridSegment;
+                
+                for(i = 0; i < n; i++)
+                {
+                    s = children[i];
+                    if(isNaN(s.percentSize))
+                    {
+                        s.size = Math.min(Math.max(s.measuredSize, s.minSize), s.maxSize);
+                        usedSpace += s.size;
+                    }
+                    else
+                    {
+                        pTotal += s.percentSize;
+                    }
+                }
+                
+                var childSpacePerCent:Number = segment.size / Math.max(pTotal, 100);
+                var sPer:Number = 0;
+                var minSize:Number = 0;
+                var minSegSize:Number = 0;
+                
+                for(var i:int = 0; i < n; i++)
+                {
+                    s = children[i];
+                    
+                    if(!isNaN(s.percentSize))
+                    {
+                        sPer = s.percentSize * childSpacePerCent;
+                        if(sPer > s.maxSize)
+                        {
+                            usedSpace += s.maxSize;
+                            pTotal -= (sPer / childSpacePerCent);
+                        }
+                        childSpacePerCent = segment.size / Math.max(pTotal, 100);
+                    }
+                    
+                    minSize = sizeSegment(children[i], segment.size, childSpacePerCent);
+                    s.size = Math.max(s.size, minSize);
+                    minSegSize += s.size;
+                }
+                
+                segment.size = Math.max(segment.size, minSegSize);
+            }
+            
+            return segment.size;
+        }
+        
+        private function positionSegment(segment:DataGridSegment, total:Number):Number
+        {
+            var p:Point = segment.position.clone();
+            p[isV() ? 'x' : 'y'] = total;
+            segment.position = p;
+            
+            if(segment is DataGridSegmentGroup)
+            {
+                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
+                var n:int = children.length;
+                for(var i:int = 0; i < n; i++)
+                {
+                    segment = children[i];
+                    total = positionSegment(segment, total);
+                }
+            }
+            else
+            {
+                total += segment.size;
+            }
+            
+            return total;
+        }
+        
         private function drawSegmentPartitions(segments:Vector.<DataGridSegment>):void
         {
             var pt:Point;
@@ -438,30 +565,6 @@ package com.pt.components.controls.grid
                 g.moveTo(pt.x, pt.y);
                 g.lineTo(isV() ? pt.x : unscaledWidth, isV() ? unscaledHeight : pt.y);
             }
-        }
-        
-        private function positionSegment(segment:DataGridSegment, total:Number):Number
-        {
-            var p:Point = segment.position.clone();
-            p[isV() ? 'x' : 'y'] = total;
-            segment.position = p;
-            
-            if(segment is DataGridSegmentGroup)
-            {
-                var children:Vector.<DataGridSegment> = DataGridSegmentGroup(segment).children;
-                var n:int = children.length;
-                for(var i:int = 0; i < n; i++)
-                {
-                    segment = children[i];
-                    total = positionSegment(segment, total);
-                }
-            }
-            else
-            {
-                total += segment.size;
-            }
-            
-            return total;
         }
     }
 }
