@@ -1,4 +1,4 @@
-package com.pt.components.controls.itemRenderers
+package com.pt.components.controls.itemRenderers.grid
 {
     import com.pt.components.controls.grid.DataGridSegment;
     import com.pt.utils.MultiTypeObjectPool;

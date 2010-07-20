@@ -1,7 +1,8 @@
-package com.pt.components.controls.itemRenderers
+package com.pt.components.controls.itemRenderers.grid
 {
     import com.pt.components.controls.grid.DataGridSegment;
     import com.pt.components.controls.grid.DataGridSegmentGroup;
+    import com.pt.components.controls.grid.events.HeaderSortEvent;
     
     import flash.display.DisplayObject;
     import flash.display.DisplayObjectContainer;
@@ -11,6 +12,32 @@ package com.pt.components.controls.itemRenderers
     
     public class DataGridListHeaderRenderer extends DataGridListSegmentRenderer
     {
+      public function DataGridListHeaderRenderer()
+      {
+        addEventListener(HeaderSortEvent.SORT, onSortHeader);
+      }
+      
+      private function onSortHeader(event:HeaderSortEvent):void
+      {
+        disableRenderers(this, DisplayObject(event.target));
+      }
+      
+      private function disableRenderers(parent:DisplayObjectContainer, except:DisplayObject):void
+      {
+        var n:int = parent.numChildren;
+        var child:DisplayObject;
+        
+        for(var i:int = 0; i < n; i++)
+        {
+          child = parent.getChildAt(i);
+          if('selected' in child && child != except)
+            child['selected'] = false;
+          
+          if(child is DisplayObjectContainer)
+            disableRenderers(DisplayObjectContainer(child), except);
+        }
+      }
+      
         override public function set segments(value:Vector.<DataGridSegment>):void
         {
             var hasGroups:Boolean = false

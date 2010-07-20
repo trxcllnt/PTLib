@@ -200,6 +200,10 @@ package com.pt.components.controls
             invalidateDisplayList();
         }
         
+        public function sort(sortFunc:Function, ...sortOptions):void
+        {
+        }
+        
         protected var virtual:Virtual;
         
         override protected function createChildren():void

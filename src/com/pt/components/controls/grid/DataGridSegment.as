@@ -1,8 +1,9 @@
 package com.pt.components.controls.grid
 {
+    import de.polygonal.ds.sort.compare.compareStringCaseInSensitive;
+    
     import flash.geom.Point;
     
-    import mx.core.ClassFactory;
     import mx.core.IFactory;
     
     public class DataGridSegment
@@ -13,6 +14,7 @@ package com.pt.components.controls.grid
         public var minSize:Number = 25;
         public var maxSize:Number = 1000;
         
+        public var resizable:Boolean = true;
         public var selected:Boolean = false;
         
         public function getRelativePosition():Point
@@ -112,6 +114,129 @@ package com.pt.components.controls.grid
                 return title;
             
             return data;
+        }
+        
+        public function applySort(dataProvider:Array, ascending:Boolean = false):Array
+        {
+          var source:Array = dataProvider.concat();
+          var flags:uint =  ascending ? 0 : Array.DESCENDING;
+          
+          if(sortField != null)
+          {
+            sortFields = getParentDataFields();
+            var a:Array = buildArrayToSort(source, sortFields);
+            a.sort(nestedSortFunction, flags);
+            
+            if(sortFunction != null)
+              a.sort(sortFunction, flags);
+            
+            var n:int = source.length;
+            var temp:Array = a.concat();
+            
+            for(var i:int = 0; i < n; ++i)
+            {
+              if(temp.indexOf(source[i]) == -1)
+                temp.push(source[i]);
+            }
+            
+            source = temp;
+          }
+          else if(sortFunction != null)
+            source.sort(sortFunction, flags);
+          else
+            source.sort(flags);
+          
+          return source;
+        }
+        
+        public function getParentDataFields():Array
+        {
+          var fields:Array = [];
+          var s:DataGridSegment = this;
+          while(s)
+          {
+            fields.push(s.dataField);
+            s = s.parent;
+          }
+          
+          return fields;
+        }
+        
+        protected function buildArrayToSort(source:Array, fields:Array):Array
+        {
+          var a:Array = [];
+          var obj:*;
+          var copy:Array;
+          var n:int = source.length;
+          var field:String;
+          
+          for(var i:int = 0; i < n; i++)
+          {
+            obj = source[i];
+            copy = fields.concat();
+            while(copy.length)
+            {
+              field = copy.pop();
+              if(!(field in obj))
+              {
+                obj = null;
+                break;
+              }
+              
+              obj = obj[field];
+            }
+            
+            if(obj)
+              a.push(source[i]);
+          }
+          
+          return a;
+        }
+        
+        protected var sortFields:Array = [];
+        
+        protected function nestedSortFunction(a:*, b:*):int
+        {
+          var fields:Array = sortFields.concat();
+          var field:String;
+          
+          while(fields.length)
+          {
+            field = fields.pop();
+            if(field in a)
+            {
+              a = a[field];
+              if(!a)
+                return 1;
+            }
+            else
+              return 1;
+            
+            if(field in b)
+            {
+              b = b[field];
+              if(!b)
+                return -1;
+            }
+            else
+              return -1;
+          }
+          
+          field = sortField;
+          
+          a = field ? a[field] : a;
+          b = field ? b[field] : b;
+          
+          if(!a)
+            return 1;
+          
+          if(!b)
+            return -1;
+          
+          if(a is String && b is String)
+            return compareStringCaseInSensitive(a, b);
+          
+          return b - a;
         }
     }
 }

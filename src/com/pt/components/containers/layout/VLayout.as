@@ -75,7 +75,7 @@ package com.pt.components.containers.layout
             }
             
             var childList:IChildList = new ArrayChildList(children);
-            var gap:Number = target is IStyleClient ? IStyleClient(target).getStyle("horizontalGap") : 0;
+            var gap:Number = target is IStyleClient ? IStyleClient(target).getStyle("verticalGap") : 0;
             
             var numChildrenWithOwnSpace:int = n;
             var obj:DisplayObject;
@@ -89,7 +89,7 @@ package com.pt.components.containers.layout
             }
             
             // stretch everything as needed including heights
-            var excessSpace:Number = Flex.flexChildHeightsProportionally(childList, w - (numChildrenWithOwnSpace - 1) * gap, h);
+            var excessSpace:Number = Flex.flexChildHeightsProportionally(childList, h - (numChildrenWithOwnSpace - 1) * gap, w);
             
             var paddingLeft:Number = target is IStyleClient ? IStyleClient(target).getStyle("paddingLeft") : 0;
             var paddingTop:Number = target is IStyleClient ? IStyleClient(target).getStyle("paddingTop") : 0;

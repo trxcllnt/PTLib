@@ -1,7 +1,9 @@
-package com.pt.components.controls.itemRenderers
+package com.pt.components.controls.itemRenderers.grid
 {
     import com.pt.components.containers.layout.ComponentLayout;
     import com.pt.components.containers.layout.HLayout;
+    import com.pt.components.controls.grid.DataGridSegment;
+    import com.pt.components.controls.grid.events.HeaderSortEvent;
     
     import flash.display.DisplayObject;
     
@@ -31,7 +33,11 @@ package com.pt.components.controls.itemRenderers
             super.updateDisplayList(w, h);
             
             if(numChildren)
+            {
                 tf.y = 2;
+                segment.resizable = false;
+                handle.mouseEnabled = false;
+            }
             
             headers.setActualSize(w, h - tf.height - 4);
             
@@ -82,10 +88,26 @@ package com.pt.components.controls.itemRenderers
         {
             return headers.getChildIndex(child);
         }
+        
+        protected var parentDataFields:Array;
+        override protected function dispatchSortEvent(asc:Boolean):void
+        {
+          parentDataFields = [];
+          var s:DataGridSegment = segment;
+          while(s)
+          {
+            parentDataFields.unshift(s.dataField);
+            s = s.parent;
+          }
+          
+          dispatchEvent(new HeaderSortEvent(HeaderSortEvent.SORT, asc));
+        }
     }
 }
 import com.pt.components.containers.layout.ComponentLayout;
 import com.pt.components.containers.layout.HLayout;
+
+import flash.display.Graphics;
 
 import mx.core.UIComponent;
 

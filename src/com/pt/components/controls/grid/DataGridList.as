@@ -1,8 +1,8 @@
 package com.pt.components.controls.grid
 {
     import com.pt.components.controls.DataList;
-    import com.pt.components.controls.itemRenderers.DataGridListItemRenderer;
-    import com.pt.components.controls.itemRenderers.DataGridListSegmentRenderer;
+    import com.pt.components.controls.itemRenderers.grid.DataGridListItemRenderer;
+    import com.pt.components.controls.itemRenderers.grid.DataGridListSegmentRenderer;
     
     import flash.display.DisplayObject;
     

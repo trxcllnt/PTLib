@@ -127,7 +127,7 @@ package com.pt.components.controls
             invalidateDisplayList();
         }
         
-        private var targetHScrollProp:* = "horizontalScrollPosition";
+        protected var targetHScrollProp:* = "horizontalScrollPosition";
         
         public function set horizontalScrollProperty(prop:*):void
         {
@@ -141,7 +141,7 @@ package com.pt.components.controls
             }
         }
         
-        private var targetVScrollProp:* = "verticalScrollPosition";
+        protected var targetVScrollProp:* = "verticalScrollPosition";
         
         public function set verticalScrollProperty(prop:*):void
         {
@@ -155,7 +155,7 @@ package com.pt.components.controls
             }
         }
         
-        private var targetHProp:* = "height";
+        protected var targetHProp:* = "height";
         
         public function set heightProperty(prop:*):void
         {
@@ -169,7 +169,7 @@ package com.pt.components.controls
             }
         }
         
-        private var targetWProp:* = "width";
+        protected var targetWProp:* = "width";
         
         public function set widthProperty(prop:*):void
         {
@@ -183,7 +183,7 @@ package com.pt.components.controls
             }
         }
         
-        private var _horizontalScrollPosition:Number = 0;
+        protected var _horizontalScrollPosition:Number = 0;
         
         public function get horizontalScrollPosition():Number
         {
@@ -203,7 +203,7 @@ package com.pt.components.controls
             invalidateDisplayList();
         }
         
-        private var _verticalScrollPosition:Number = 0;
+        protected var _verticalScrollPosition:Number = 0;
         
         public function get verticalScrollPosition():Number
         {

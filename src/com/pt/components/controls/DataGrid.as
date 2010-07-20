@@ -1,15 +1,17 @@
 package com.pt.components.controls
 {
     
+    import com.pt.components.controls.grid.DataGridContainer;
+    import com.pt.components.controls.grid.DataGridSegment;
+    
     import flash.display.DisplayObject;
     import flash.geom.Point;
     
     import mx.containers.BoxDirection;
     import mx.controls.scrollClasses.ScrollBar;
     import mx.core.IUIComponent;
+    import mx.core.UIComponent;
     import mx.events.ScrollEvent;
-    import com.pt.components.controls.grid.DataGridContainer;
-    import com.pt.components.controls.grid.DataGridSegment;
     
     public class DataGrid extends Scroller
     {
@@ -164,13 +166,49 @@ package com.pt.components.controls
             invalidateDisplayList();
         }
         
+        override public function set horizontalScrollPosition(value:Number):void
+        {
+          if(value === _horizontalScrollPosition)
+            return;
+          
+          var tw:Number = targetWidth;
+          tw += (hasVertical && hasRight) ? 16 : 0;
+          tw += (hasVertical && hasLeft) ? 16 : 0;
+          
+          _horizontalScrollPosition = Math.min(Math.max(value, 0), Math.max(Math.round(tw - width), 0));
+          
+          if(isVirtual)
+            target[targetHScrollProp] = _horizontalScrollPosition;
+          
+          invalidateDisplayList();
+        }
+        
+        override public function set verticalScrollPosition(value:Number):void
+        {
+          if(value === _verticalScrollPosition)
+            return;
+          
+          var th:Number = targetHeight;
+          th += (hasHorizontal && hasBottom) ? 16 : 0;
+          th += (hasHorizontal && hasTop) ? 16 : 0;
+          
+          _verticalScrollPosition = Math.min(Math.max(value, 0), Math.max(Math.round(th - height), 0));
+          
+          if(isVirtual)
+            target[targetVScrollProp] = _verticalScrollPosition;
+          
+          invalidateDisplayList();
+        }
+        
         protected var container:DataGridContainer;
         
         override protected function createChildren():void
         {
             super.createChildren();
             
-            container = new DataGridContainer();
+            if(!container)
+              container = new DataGridContainer();
+            
             target = container;
             
             container.direction = direction;
@@ -202,8 +240,16 @@ package com.pt.components.controls
             {
                 sizeTarget(target);
                 
-                configureHorizontalScrollBar(w, h, targetWidth);
-                configureVerticalScrollBar(h, w, targetHeight);
+                var tw:Number = targetWidth;
+                tw += (hasVertical && hasRight) ? 16 : 0;
+                tw += (hasVertical && hasLeft) ? 16 : 0;
+                
+                var th:Number = targetHeight;
+                th += (hasHorizontal && hasBottom) ? 16 : 0;
+                th += (hasHorizontal && hasTop) ? 16 : 0;
+                
+                configureHorizontalScrollBar(w, h, tw);
+                configureVerticalScrollBar(h, w, th);
                 
                 positionTarget(target);
             }
@@ -240,6 +286,7 @@ package com.pt.components.controls
             ch -= (!isV() && hasHorizontal && hasTop) ? 16 : 0;
             
             IUIComponent(target).setActualSize(cw, ch);
+            
         }
         
         override protected function setScrollBarProperties(scrollBar:ScrollBar,

@@ -1,8 +1,8 @@
-package com.pt.components.controls.itemRenderers.layout
+package com.pt.components.controls.itemRenderers.grid.layout
 {
     import com.pt.components.containers.layout.ComponentLayout;
     import com.pt.components.controls.grid.DataGridSegment;
-    import com.pt.components.controls.itemRenderers.DataGridListSegmentRenderer;
+    import com.pt.components.controls.itemRenderers.grid.DataGridListSegmentRenderer;
     
     import flash.display.DisplayObject;
     import flash.geom.Point;
