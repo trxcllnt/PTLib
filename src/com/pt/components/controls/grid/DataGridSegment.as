@@ -1,18 +1,31 @@
 package com.pt.components.controls.grid
 {
+    import com.pt.components.controls.grid.itemRenderers.DataGridHeaderRenderer;
+    
     import de.polygonal.ds.sort.compare.compareStringCaseInSensitive;
     
     import flash.geom.Point;
     
+    import mx.core.ClassFactory;
     import mx.core.IFactory;
     
     public class DataGridSegment
     {
-        public var size:Number = NaN;
+        public function DataGridSegment():void
+        {
+            header = new ClassFactory(DataGridHeaderRenderer);
+        }
+        
+        public var size:Number = 0;
         public var measuredSize:Number = 0;
         public var percentSize:Number = NaN;
         public var minSize:Number = 25;
         public var maxSize:Number = 1000;
+        
+        public function get relativeMinSize():Number
+        {
+          return minSize;
+        }
         
         public var resizable:Boolean = true;
         public var selected:Boolean = false;
@@ -20,10 +33,11 @@ package com.pt.components.controls.grid
         public function getRelativePosition():Point
         {
             var pt:Point = position.clone();
-            if(parent)
+            var p:DataGridSegment = parent;
+            while(p)
             {
-                pt.x -= parent.position.x;
-                pt.y -= parent.position.y;
+                pt.add(p.position);
+                p = p.parent;
             }
             
             return pt;
@@ -236,7 +250,7 @@ package com.pt.components.controls.grid
           if(a is String && b is String)
             return compareStringCaseInSensitive(a, b);
           
-          return b - a;
+          return a - b;
         }
     }
 }

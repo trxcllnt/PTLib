@@ -1,17 +1,14 @@
-package com.pt.components.controls.itemRenderers.grid
+package com.pt.components.controls.grid.itemRenderers
 {
     import com.pt.components.controls.grid.DataGridSegment;
-    import com.pt.utils.MultiTypeObjectPool;
     
     import flash.display.DisplayObject;
     import flash.display.Graphics;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     
-    public class DataGridListItemRenderer extends DataGridListSegmentRenderer
+    public class DataGridListItemRenderer extends DataGridSegmentRendererBase
     {
-        protected static var pool:MultiTypeObjectPool = new MultiTypeObjectPool();
-        
         private var _index:int = 0;
         
         public function get index():int
@@ -25,7 +22,7 @@ package com.pt.components.controls.itemRenderers.grid
                 return;
             
             _index = value;
-//            invalidateDisplayList();
+            drawBackground();
         }
         
         override protected function commitRendererData(renderer:DisplayObject, segment:DataGridSegment):void
@@ -49,15 +46,18 @@ package com.pt.components.controls.itemRenderers.grid
                 var last:DataGridSegment = segments[segments.length - 1];
                 var lPos:Point = last.position;
                 
-                bgRect = new Rectangle(fPos.x, fPos.y,
-                    lPos.x + (isV() ? w : (last.size || 0)), 
-                    lPos.y + (isV() ? (last.size || 0) : h));
+                bgRect = new Rectangle(fPos.x, fPos.y, lPos.x + (isV() ? w : (last.size || 0)), lPos.y + (isV() ? (last.size || 0) : h));
             }
             else
             {
                 bgRect = new Rectangle(0, 0, w, h);
             }
             
+            drawBackground();
+        }
+        
+        protected function drawBackground():void
+        {
             var g:Graphics = graphics;
             g.clear();
             g.beginFill(index % 2 == 0 ? 0xFFFFFF : 0xDDEEFF, 1);

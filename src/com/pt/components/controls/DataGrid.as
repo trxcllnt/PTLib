@@ -315,6 +315,7 @@ package com.pt.components.controls
                     barX += container.headerSize;
                     barWidth -= container.headerSize;
                 }
+                
                 if(!hasLeft)
                     barY -= 16;
                 if(hasVertical && hasRight)

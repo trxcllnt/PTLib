@@ -54,6 +54,7 @@ package com.pt.components.controls
             _direction = value;
             directionChanged = true;
             
+            invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
         }
@@ -100,6 +101,7 @@ package com.pt.components.controls
             if(variableItemSize == false && isNaN(itemSize))
                 _itemSize = 25;
             
+            invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
         }
@@ -127,7 +129,7 @@ package com.pt.components.controls
             if(newRendererInView.x)
             {
                 lastRendererScrollPosition.x = value;
-                commitRendererData();
+                invalidateProperties();
             }
             
             invalidateDisplayList();
@@ -156,7 +158,8 @@ package com.pt.components.controls
             if(newRendererInView.y)
             {
                 lastRendererScrollPosition.y = value;
-                commitRendererData();
+                invalidateProperties();
+//                commitRendererData();
             }
             
             invalidateDisplayList();
@@ -179,6 +182,7 @@ package com.pt.components.controls
             _dataProvider = value;
             dataProviderChanged = true;
             
+            invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
         }
@@ -196,6 +200,7 @@ package com.pt.components.controls
             itemRendererFactory = factory;
             itemRendererChanged = true;
             
+            invalidateProperties();
             invalidateSize();
             invalidateDisplayList();
         }
@@ -256,15 +261,28 @@ package com.pt.components.controls
             return (dataProviderChanged || itemRendererChanged || newRenderer || directionChanged);
         }
         
-        override protected function measure():void
+        override protected function commitProperties():void
         {
+            super.commitProperties();
+            
             if(dataProviderChanged || (dataProvider && (itemRendererChanged || directionChanged)))
             {
                 // Only do this when the data or itemRenderer changes. This is an incredibly
                 // intensive operation, so change the data/renderers as little as possible.
-                layout.measure();
                 measureAllDataItems();
+            }
+            
+            if(processRendererData())
+            {
                 commitRendererData();
+            }
+        }
+        
+        override protected function measure():void
+        {
+            if(dataProviderChanged || (dataProvider && (itemRendererChanged || directionChanged)))
+            {
+                layout.measure();
             }
         }
         

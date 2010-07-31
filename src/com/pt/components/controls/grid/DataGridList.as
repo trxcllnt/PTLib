@@ -1,8 +1,8 @@
 package com.pt.components.controls.grid
 {
     import com.pt.components.controls.DataList;
-    import com.pt.components.controls.itemRenderers.grid.DataGridListItemRenderer;
-    import com.pt.components.controls.itemRenderers.grid.DataGridListSegmentRenderer;
+    import com.pt.components.controls.grid.itemRenderers.DataGridListItemRenderer;
+    import com.pt.components.controls.grid.itemRenderers.DataGridSegmentRendererBase;
     
     import flash.display.DisplayObject;
     
@@ -55,10 +55,10 @@ package com.pt.components.controls.grid
         
         override protected function setRendererData(renderer:DisplayObject, data:Object, index:int):void
         {
-            if(renderer is DataGridListSegmentRenderer)
+            if(renderer is DataGridSegmentRendererBase)
             {
-                DataGridListSegmentRenderer(renderer).direction = segmentDirection;
-                DataGridListSegmentRenderer(renderer).segments = segments;
+                DataGridSegmentRendererBase(renderer).direction = segmentDirection;
+                DataGridSegmentRendererBase(renderer).segments = segments;
                 
                 if(renderer is DataGridListItemRenderer)
                     DataGridListItemRenderer(renderer).index = index;

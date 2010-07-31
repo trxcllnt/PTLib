@@ -1,6 +1,6 @@
 package com.pt.components.controls.grid
 {
-    import com.pt.components.controls.itemRenderers.grid.DataGridListSegmentRenderer;
+    import com.pt.components.controls.grid.itemRenderers.DataGridSegmentRendererBase;
     
     import flash.geom.Point;
     
@@ -10,7 +10,19 @@ package com.pt.components.controls.grid
     {
         public function DataGridSegmentGroup()
         {
-            renderer = new ClassFactory(DataGridListSegmentRenderer);
+            renderer = new ClassFactory(DataGridSegmentRendererBase);
+        }
+        
+        override public function get relativeMinSize():Number
+        {
+          var kidsSize:Number = 0;
+          var n:int = kids.length;
+          for(var i:int = 0; i < n; ++i)
+          {
+              kidsSize += kids[i].relativeMinSize;
+          }
+          
+          return Math.max(kidsSize, minSize);
         }
         
         private var kids:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();

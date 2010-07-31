@@ -1,4 +1,4 @@
-package com.pt.components.controls.itemRenderers.grid
+package com.pt.components.controls.grid.itemRenderers
 {
   import com.pt.components.controls.grid.DataGridSegment;
   import com.pt.components.controls.grid.events.HeaderResizeEvent;
@@ -98,7 +98,7 @@ package com.pt.components.controls.itemRenderers.grid
       selected = true;
       ascending = !ascending;
       
-      dispatchSortEvent(ascending)
+      dispatchSortEvent(ascending);
     }
 
     private var _data:Object;
