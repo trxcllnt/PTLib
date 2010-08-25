@@ -27,6 +27,11 @@ package com.pt.components.controls.grid
           return minSize;
         }
         
+        public function get relativeMeasuredSize():Number
+        {
+          return measuredSize;
+        }
+        
         public var resizable:Boolean = true;
         public var selected:Boolean = false;
         
@@ -36,7 +41,7 @@ package com.pt.components.controls.grid
             var p:DataGridSegment = parent;
             while(p)
             {
-                pt.add(p.position);
+                pt = pt.add(p.position);
                 p = p.parent;
             }
             

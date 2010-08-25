@@ -7,3 +7,9 @@ Scroller
 {
   dragCursor: Embed(source="assets/cursors.swf#Move");
 }
+
+DataGridHeaderSeparator
+{
+  verticalCursor: Embed(source="assets/cursors.swf#ColumnResize");
+  horizontalCursor: Embed(source="assets/cursors.swf#RowResize");
+}

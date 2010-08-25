@@ -31,16 +31,16 @@ package com.pt.components.controls.grid.itemRenderers.layout
                 if(r is IUIComponent)
                 {
                     if(isV())
-                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredWidth(), segment.measuredSize);
+                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredWidth(), segment.relativeMeasuredSize);
                     else
-                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredHeight(), segment.measuredSize);
+                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredHeight(), segment.relativeMeasuredSize);
                 }
                 else
                 {
                     if(isV())
-                        segment.measuredSize = Math.max(r.width, segment.measuredSize);
+                        segment.measuredSize = Math.max(r.width, segment.relativeMeasuredSize);
                     else
-                        segment.measuredSize = Math.max(r.height, segment.measuredSize);
+                        segment.measuredSize = Math.max(r.height, segment.relativeMeasuredSize);
                 }
             }
         }
@@ -104,8 +104,11 @@ package com.pt.components.controls.grid.itemRenderers.layout
                         percentTotal -= segment.percentSize;
                         spacePerCent = ((isV() ? w : h) - usedSpace) / Math.max(percentTotal, 100);
                     }
-                    segment.size = Math.min(Math.max(Math.round(sPer), segment.relativeMinSize), segment.maxSize);
+                    
+                    segment.size = segment.measuredSize = Math.min(Math.max(Math.round(sPer), segment.relativeMinSize), segment.maxSize);
                 }
+                
+                segment.size = Math.round(segment.size);
                 
                 segment.position[isV() ? 'x' : 'y'] = aggregatePosition;
                 

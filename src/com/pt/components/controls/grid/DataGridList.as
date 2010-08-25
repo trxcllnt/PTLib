@@ -5,6 +5,8 @@ package com.pt.components.controls.grid
     import com.pt.components.controls.grid.itemRenderers.DataGridSegmentRendererBase;
     
     import flash.display.DisplayObject;
+    import flash.display.Shape;
+    import flash.geom.Point;
     
     import mx.containers.BoxDirection;
     import mx.core.ClassFactory;

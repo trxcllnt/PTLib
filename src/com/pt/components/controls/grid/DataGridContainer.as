@@ -7,7 +7,6 @@ package com.pt.components.controls.grid
     import com.pt.components.controls.grid.itemRenderers.DataGridListHeader;
     import com.pt.virtual.Dimension;
     
-    import flash.display.Graphics;
     import flash.display.Shape;
     import flash.geom.Point;
     import flash.geom.Rectangle;
@@ -15,10 +14,7 @@ package com.pt.components.controls.grid
     import mx.containers.BoxDirection;
     import mx.core.IInvalidating;
     import mx.core.UIComponent;
-    import mx.core.mx_internal;
     import mx.events.FlexEvent;
-    
-    use namespace mx_internal;
     
     public class DataGridContainer extends UIComponent
     {
@@ -232,6 +228,11 @@ package com.pt.components.controls.grid
                                                   isV() ? unscaledWidth : header.width,
                                                   isV() ? header.height : unscaledHeight);
             }
+            
+            if(list)
+            {
+                gfx.scrollRect = list.scrollRect;
+            }
         }
         
         protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
@@ -262,17 +263,10 @@ package com.pt.components.controls.grid
         
         protected var list:DataGridList;
         protected var header:DataGridHeaderBase;
-        private var gfx:Shape;
         
         override protected function createChildren():void
         {
             super.createChildren();
-            
-            header = new DataGridListHeader();
-            header.segments = segments;
-            header.direction = segmentDirection;
-            header.addEventListener(HeaderResizeEvent.RESIZE, onHeaderResize);
-            addChild(header);
             
             list = new DataGridList();
             list.direction = direction;
@@ -281,31 +275,14 @@ package com.pt.components.controls.grid
             list.variableItemSize = variableItemSize;
             addChild(list);
             
+            header = new DataGridListHeader();
+            header.segments = segments;
+            header.direction = segmentDirection;
+            header.addEventListener(HeaderResizeEvent.RESIZE, onHeaderResize);
+            addChild(header);
+            
             gfx = new Shape();
             addChild(gfx);
-        }
-        
-        protected function processSegments():void
-        {
-            if(!(segmentsChanged || newRendererInView.x || newRendererInView.y))
-                return;
-            
-            var minPosition:Number = isV() ? horizontalScrollPosition : verticalScrollPosition;
-            var maxPosition:Number = minPosition + (isV() ? width : height);
-            var items:Array = segmentDimension.getBetween(minPosition, maxPosition);
-            
-            var visibleSegments:Vector.<DataGridSegment> = Vector.<DataGridSegment>(items);
-            header.segments = visibleSegments;
-            list.segments = visibleSegments;
-            
-            if(visibleSegments.length)
-            {
-                var scrollIndex:int = isV() ? 1 : 0;
-                var segment:DataGridSegment = visibleSegments[0];
-                scrollDelta[scrollIndex].x = segmentDimension.getPosition(segment);
-                segment = visibleSegments[visibleSegments.length - 1];
-                scrollDelta[scrollIndex].y = segmentDimension.getPosition(segment) + segmentDimension.getSize(segment);
-            }
         }
         
         override protected function measure():void
@@ -338,33 +315,57 @@ package com.pt.components.controls.grid
             }
             
             setScrollProperties();
-            
-            var g:Graphics = graphics;
-            g.clear();
-            g.beginFill(0x00, 0);
-            g.drawRect(0, 0, w, h);
-            
+
             if(isV())
             {
                 header.setActualSize(w, headerSize);
-                g.moveTo(0, header.height);
-                g.lineTo(w, header.height);
+                header.dataGridSize = h;
                 
                 list.setActualSize(w, h - headerSize);
                 list.move(0, headerSize);
+                
+                gfx.x = 0;
+                gfx.y = headerSize;
             }
             else
             {
                 header.setActualSize(headerSize, h);
-                g.moveTo(header.width, 0);
-                g.lineTo(header.width, h);
+                header.dataGridSize = w;
                 
                 list.setActualSize(w - headerSize, h);
                 list.move(headerSize, 0);
+                
+                gfx.x = headerSize;
+                gfx.y = 0;
             }
             
             newRendererInView.x = 0;
             newRendererInView.y = 0;
+        }
+        
+        protected function processSegments():void
+        {
+            if(!(segmentsChanged || newRendererInView.x || newRendererInView.y))
+              return;
+            
+            var minPosition:Number = isV() ? horizontalScrollPosition : verticalScrollPosition;
+            var maxPosition:Number = minPosition + (isV() ? width : height);
+            var items:Array = segmentDimension.getBetween(minPosition, maxPosition);
+            
+            var visibleSegments:Vector.<DataGridSegment> = Vector.<DataGridSegment>(items);
+            header.segments = visibleSegments;
+            list.segments = visibleSegments;
+            
+            if(visibleSegments.length)
+            {
+                var scrollIndex:int = isV() ? 1 : 0;
+                var segment:DataGridSegment = visibleSegments[0];
+                scrollDelta[scrollIndex].x = segmentDimension.getPosition(segment);
+                segment = visibleSegments[visibleSegments.length - 1];
+                scrollDelta[scrollIndex].y = segmentDimension.getPosition(segment) + segmentDimension.getSize(segment);
+            }
+            
+            header.addEventListener(FlexEvent.UPDATE_COMPLETE, onHeaderUpdateComplete);
         }
         
         private function onSegmentsChangedUpdateComplete(event:FlexEvent):void
@@ -418,6 +419,41 @@ package com.pt.components.controls.grid
         {
             segmentsChanged = true;
             invalidateDisplayList();
+        }
+        
+        protected function onHeaderUpdateComplete(event:FlexEvent):void
+        {
+            header.removeEventListener(event.type, onHeaderUpdateComplete);
+            
+            gfx.graphics.clear();
+            drawSegmentLines(header.segments);
+        }
+        
+        private var gfx:Shape;
+        
+        private function drawSegmentLines(segments:Vector.<DataGridSegment>):void
+        {
+          var n:int = segments.length;
+          var segment:DataGridSegment;
+          var pt:Point;
+          
+          for(var i:int = 0; i < n; ++i)
+          {
+            segment = segments[i];
+            
+            if(segment is DataGridSegmentGroup)
+            {
+                drawSegmentLines(DataGridSegmentGroup(segment).children);
+            }
+            else
+            {
+                pt = segment.getRelativePosition();
+                pt[isV() ? 'x' : 'y'] += segment.size;
+                gfx.graphics.lineStyle(1, 0xCCCCCC);
+                gfx.graphics.moveTo(isV() ? pt.x : 0, isV() ? 0 : pt.y);
+                gfx.graphics.lineTo(isV() ? pt.x : list.getExplicitOrMeasuredWidth(), isV() ? list.getExplicitOrMeasuredHeight() : pt.y);
+            }
+          }
         }
     }
 }

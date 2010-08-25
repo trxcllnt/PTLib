@@ -25,6 +25,18 @@ package com.pt.components.controls.grid
           return Math.max(kidsSize, minSize);
         }
         
+        override public function get relativeMeasuredSize():Number
+        {
+          var kidsSize:Number = 0;
+          var n:int = kids.length;
+          for(var i:int = 0; i < n; ++i)
+          {
+              kidsSize += kids[i].relativeMeasuredSize;
+          }
+          
+          return kidsSize;
+        }
+        
         private var kids:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
         
         public function get children():Vector.<DataGridSegment>

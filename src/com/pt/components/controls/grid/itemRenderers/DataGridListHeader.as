@@ -1,5 +1,6 @@
 package com.pt.components.controls.grid.itemRenderers
 {
+  import com.pt.components.controls.grid.events.HeaderResizeEvent;
   import com.pt.components.controls.grid.events.HeaderSortEvent;
   
   import flash.display.DisplayObject;
@@ -32,6 +33,11 @@ package com.pt.components.controls.grid.itemRenderers
         if(child is DisplayObjectContainer)
           disableRenderers(DisplayObjectContainer(child), except);
       }
+    }
+    
+    override protected function measure():void
+    {
+      super.measure();
     }
   }
 }
