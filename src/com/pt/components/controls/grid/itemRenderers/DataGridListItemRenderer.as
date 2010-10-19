@@ -46,7 +46,7 @@ package com.pt.components.controls.grid.itemRenderers
                 var last:DataGridSegment = segments[segments.length - 1];
                 var lPos:Point = last.position;
                 
-                bgRect = new Rectangle(fPos.x, fPos.y, lPos.x + (isV() ? w : (last.size || 0)), lPos.y + (isV() ? (last.size || 0) : h));
+                bgRect = new Rectangle(fPos.x, fPos.y, lPos.x + w, h);
             }
             else
             {

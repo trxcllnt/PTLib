@@ -16,20 +16,14 @@ package com.pt.components.controls.grid
             header = new ClassFactory(DataGridHeaderRenderer);
         }
         
-        public var size:Number = 0;
-        public var measuredSize:Number = 0;
-        public var percentSize:Number = NaN;
+        public var size:Number = NaN;
+        public var measuredSize:Number = minSize;
         public var minSize:Number = 25;
         public var maxSize:Number = 1000;
         
         public function get relativeMinSize():Number
         {
           return minSize;
-        }
-        
-        public function get relativeMeasuredSize():Number
-        {
-          return measuredSize;
         }
         
         public var resizable:Boolean = true;

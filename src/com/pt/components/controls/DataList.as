@@ -3,14 +3,11 @@ package com.pt.components.controls
     import com.pt.components.containers.layout.ComponentLayout;
     import com.pt.components.containers.layout.ListLayout;
     import com.pt.virtual.Dimension;
-    import com.pt.virtual.Virtual;
     
     import flash.display.DisplayObject;
     import flash.geom.Point;
     import flash.geom.Rectangle;
     
-    import mx.containers.BoxDirection;
-    import mx.core.ClassFactory;
     import mx.core.IDataRenderer;
     import mx.core.IFactory;
     import mx.core.IInvalidating;
@@ -22,49 +19,13 @@ package com.pt.components.controls
     
     public class DataList extends UIComponent
     {
+        private var layout:ComponentLayout;
+        
         public function DataList()
         {
             super();
             layout = new ListLayout();
             layout.target = this;
-        }
-        
-        protected function isV():Boolean
-        {
-            return direction == BoxDirection.VERTICAL;
-        }
-        
-        protected var layout:ComponentLayout;
-        
-        private var _direction:String = BoxDirection.VERTICAL;
-        protected var directionChanged:Boolean = false;
-        
-        [Inspectable(type="String", enumeration="vertical,horizontal")]
-        
-        public function get direction():String
-        {
-            return _direction;
-        }
-        
-        public function set direction(value:String):void
-        {
-            if(value === _direction)
-                return;
-            
-            _direction = value;
-            directionChanged = true;
-            
-            invalidateProperties();
-            invalidateSize();
-            invalidateDisplayList();
-        }
-        
-        public function getDimension(direction:String):Dimension
-        {
-            if(direction == BoxDirection.VERTICAL)
-                return virtual.getDimension('x');
-            
-            return virtual.getDimension('y');
         }
         
         private var _itemSize:Number = NaN;
@@ -159,7 +120,6 @@ package com.pt.components.controls
             {
                 lastRendererScrollPosition.y = value;
                 invalidateProperties();
-//                commitRendererData();
             }
             
             invalidateDisplayList();
@@ -209,7 +169,12 @@ package com.pt.components.controls
         {
         }
         
-        protected var virtual:Virtual;
+        protected var _dimension:Dimension;
+        
+        public function get dimension():Dimension
+        {
+          return _dimension;
+        }
         
         override protected function createChildren():void
         {
@@ -217,8 +182,8 @@ package com.pt.components.controls
             
             renderers = [];
             
-            if(!virtual)
-                virtual = new Virtual("x", "y");
+            if(!_dimension)
+              _dimension = new Dimension();
         }
         
         protected function commitRendererData():void
@@ -226,10 +191,10 @@ package com.pt.components.controls
             if(!processRendererData() || !scrollRect)
                 return;
             
-            var minPosition:Number = isV() ? scrollRect.y : scrollRect.x;
-            var maxPosition:Number = minPosition + (isV() ? scrollRect.height : scrollRect.width);
+            var minPosition:Number = scrollRect.y;
+            var maxPosition:Number = minPosition + scrollRect.height;
             
-            var d:Dimension = getDimension(direction);
+            var d:Dimension = dimension;
             var items:Array = d.getBetween(minPosition, maxPosition);
             var n:int = items.length;
             var renderer:DisplayObject;
@@ -257,15 +222,15 @@ package com.pt.components.controls
         
         protected function processRendererData():Boolean
         {
-            var newRenderer:Boolean = isV() ? Boolean(newRendererInView.y) : Boolean(newRendererInView.x);
-            return (dataProviderChanged || itemRendererChanged || newRenderer || directionChanged);
+            var newRenderer:Boolean = Boolean(newRendererInView.y);
+            return (dataProviderChanged || itemRendererChanged || newRenderer);
         }
         
         override protected function commitProperties():void
         {
             super.commitProperties();
             
-            if(dataProviderChanged || (dataProvider && (itemRendererChanged || directionChanged)))
+            if(dataProviderChanged || (dataProvider && itemRendererChanged))
             {
                 // Only do this when the data or itemRenderer changes. This is an incredibly
                 // intensive operation, so change the data/renderers as little as possible.
@@ -280,7 +245,7 @@ package com.pt.components.controls
         
         override protected function measure():void
         {
-            if(dataProviderChanged || (dataProvider && (itemRendererChanged || directionChanged)))
+            if(dataProviderChanged || (dataProvider && itemRendererChanged))
             {
                 layout.measure();
             }
@@ -312,17 +277,16 @@ package com.pt.components.controls
             if(renderers.length > 0)
             {
                 var item:Object = renderers[0]['data'];
-                var scrollIndex:int = isV() ? 0 : 1;
-                scrollDelta[scrollIndex].x = getDimension(direction).getPosition(item);
+                var scrollIndex:int = 0;
+                scrollDelta[scrollIndex].x = dimension.getPosition(item);
                 item = renderers[renderers.length - 1]['data'];
-                scrollDelta[scrollIndex].y = getDimension(direction).getPosition(item) + getDimension(direction).getSize(item);
+                scrollDelta[scrollIndex].y = dimension.getPosition(item) + dimension.getSize(item);
             }
             
             newRendererInView.x = 0;
             newRendererInView.y = 0;
             itemRendererChanged = false;
             dataProviderChanged = false;
-            directionChanged = false;
         }
         
         protected function measureAllDataItems():void
@@ -330,7 +294,7 @@ package com.pt.components.controls
             if(!itemRendererFactory)
                 return;
             
-            getDimension(direction).clear();
+            dimension.clear();
             
             measuredWidth = 0;
             measuredHeight = 0;
@@ -361,25 +325,22 @@ package com.pt.components.controls
                     rSize = getRendererSize(renderer);
                     
                     enqueueDataItem(renderer, a[i]);
-                    measuredWidth = isV() ? Math.max(rSize.x, measuredWidth) : measuredWidth + rSize.x;
-                    measuredHeight = isV() ? measuredHeight + rSize.y : Math.max(rSize.y, measuredHeight);
+                    measuredWidth = Math.max(rSize.x, measuredWidth);
+                    measuredHeight = measuredHeight + rSize.y;
                 }
             }
             else
             {
                 setRendererData(renderer, a[0], 0);
                 
-                if(isV())
-                    renderer.height = itemSize;
-                else
-                    renderer.width = itemSize;
+                renderer.height = itemSize;
                 
                 if(renderer is IInvalidating)
                     IInvalidating(renderer).validateNow();
                 
                 rSize = getRendererSize(renderer);
-                measuredWidth = isV() ? Math.max(rSize.x, measuredWidth) : (Math.max(itemSize, 0) * n);
-                measuredHeight = isV() ? (Math.max(itemSize, 0) * n) : Math.max(rSize.y, measuredHeight);
+                measuredWidth = Math.max(rSize.x, measuredWidth);
+                measuredHeight = Math.max(itemSize, 0) * n;
                 for(i = 0; i < n; i++)
                 {
                     enqueueDataItem(renderer, a[i]);
@@ -415,22 +376,11 @@ package com.pt.components.controls
         
         protected function enqueueDataItem(renderer:DisplayObject, data:Object):void
         {
-            var num:Number;
+            var num:Number = renderer is IUIComponent ?
+                IUIComponent(renderer).getExplicitOrMeasuredHeight() :
+                renderer.height;
             
-            if(direction == 'vertical')
-            {
-                num = renderer is IUIComponent ?
-                    IUIComponent(renderer).getExplicitOrMeasuredHeight() :
-                    renderer.height;
-            }
-            else if(direction == 'horizontal')
-            {
-                num = renderer is IUIComponent ?
-                    IUIComponent(renderer).getExplicitOrMeasuredWidth() :
-                    renderer.width;
-            }
-            
-            getDimension(direction).add(data, num);
+            dimension.add(data, num);
         }
     }
 }

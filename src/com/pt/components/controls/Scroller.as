@@ -244,12 +244,13 @@ package com.pt.components.controls
         {
             super.updateDisplayList(w, h);
             
-            if(w <= 0 || h <= 0)
-            {
-                w = w || parent.width;
-                h = h || parent.height;
-                setActualSize(w, h);
-            }
+            if(w <= 0 && parent)
+              w = parent.width;
+            
+            if(h <= 0 && parent)
+              h = parent.height;
+            
+            setActualSize(w, h);
             
             if(target)
             {
@@ -271,30 +272,32 @@ package com.pt.components.controls
             
             if(isVirtual)
             {
-                cw = unscaledWidth;
-                ch = unscaledHeight;
+              cw = unscaledWidth;
+              ch = unscaledHeight;
             }
             else
             {
-                if(!isNaN(IUIComponent(target).percentWidth))
-                    cw = unscaledWidth;
-                else
-                    cw = IUIComponent(target).getExplicitOrMeasuredWidth();
-                if(!isNaN(IUIComponent(target).percentHeight))
-                    ch = unscaledHeight;
-                else
-                    ch = IUIComponent(target).getExplicitOrMeasuredHeight();
-            }
-            
-            if(inset)
-            {
-                cw -= (hasVertical && hasRight) ? 16 : 0;
-                ch -= (hasHorizontal && hasBottom) ? 16 : 0;
-                cw -= (hasVertical && hasLeft) ? 16 : 0;
-                ch -= (hasHorizontal && hasTop) ? 16 : 0;
+              if(!isNaN(IUIComponent(target).percentWidth))
+                cw = unscaledWidth * IUIComponent(target).percentWidth * .01;
+              else
+                cw = IUIComponent(target).getExplicitOrMeasuredWidth();
+              if(!isNaN(IUIComponent(target).percentHeight))
+                ch = unscaledHeight * IUIComponent(target).percentHeight * .01;
+              else
+                ch = IUIComponent(target).getExplicitOrMeasuredHeight();
             }
             
             IUIComponent(target).setActualSize(cw, ch);
+            
+            if(inset)
+            {
+              cw -= (hasVertical && hasRight) ? 16 : 0;
+              ch -= (hasHorizontal && hasBottom) ? 16 : 0;
+              cw -= (hasVertical && hasLeft) ? 16 : 0;
+              ch -= (hasHorizontal && hasTop) ? 16 : 0;
+              
+              IUIComponent(target).setActualSize(cw, ch);
+            }
         }
         
         protected function positionTarget(target:DisplayObject):void
@@ -540,12 +543,38 @@ package com.pt.components.controls
         
         public function get hasVertical():Boolean
         {
-            return target && targetHProp in target && unscaledHeight < targetHeight;
+            var val:Boolean = target && targetHProp in target && unscaledHeight < targetHeight;
+            
+            if(inset)
+              return val;
+            
+            var h:Number = unscaledHeight;
+            if(hasTop && topBar)
+              h -= 16;
+            if(hasBottom && bottomBar)
+              h -= 16;
+            
+            val ||= h < targetHeight;
+            
+            return val;
         }
         
         public function get hasHorizontal():Boolean
         {
-            return target && targetWProp in target && unscaledWidth < targetWidth;
+            var val:Boolean = target && targetWProp in target && unscaledWidth < targetWidth;
+            
+            if(inset)
+              return val;
+            
+            var w:Number = unscaledWidth;
+            if(hasRight && rightBar)
+              w -= 16;
+            if(hasLeft && leftBar)
+              w -= 16;
+            
+            val ||= w < targetWidth;
+            
+            return val;
         }
         
         protected function get targetWidth():Number

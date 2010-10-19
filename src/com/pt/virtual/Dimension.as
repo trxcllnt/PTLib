@@ -240,12 +240,7 @@ package com.pt.virtual
      * the supplied index isn't exact. You can search either forwards or backwards,
      * with backwards being the default option.
      *
-     * @param index The index to retrieve (or start from if you are searching) from the list
-     * @param exact Whether to return exactly the item at the index (potentially null), or
-     * search through the list for the item closest to the supplied index.
-     * @param direction The search option, if searching, through the list. If the index
-     * isn't in the list and the exact option is false, this determines which direction
-     * to search, true is backwards, false is forwards. Default is true (backwards).
+     * @param position The index to retrieve (or start from if you are searching) from the list
      */
     public function getAt(position:int):*
     {

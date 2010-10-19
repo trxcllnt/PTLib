@@ -2,14 +2,12 @@ package com.pt.components.controls.grid.itemRenderers
 {
   import com.pt.components.controls.grid.DataGridSegment;
   import com.pt.components.controls.grid.DataGridSegmentGroup;
-  import com.pt.components.controls.grid.events.HeaderResizeEvent;
   import com.pt.components.controls.grid.itemRenderers.layout.DataGridSegmentRendererLayout;
   import com.pt.utils.MultiTypeObjectPool;
-  
+
   import flash.display.DisplayObject;
   import flash.display.Graphics;
-  
-  import mx.containers.BoxDirection;
+
   import mx.core.ClassFactory;
   import mx.core.IDataRenderer;
   import mx.core.IFactory;
@@ -20,47 +18,11 @@ package com.pt.components.controls.grid.itemRenderers
     public function DataGridSegmentRendererBase()
     {
       layout.target = this;
-      
-      addEventListener(HeaderResizeEvent.RESIZE, onHeaderResize);
-    }
-    
-    protected function onHeaderResize(event:HeaderResizeEvent):void
-    {
-      segmentsChanged = true;
-      invalidateSize();
-      invalidateDisplayList();
     }
 
     protected var layout:DataGridSegmentRendererLayout = new DataGridSegmentRendererLayout();
 
     protected static var pool:MultiTypeObjectPool = new MultiTypeObjectPool();
-
-    private var _direction:String = BoxDirection.HORIZONTAL;
-
-    [Inspectable(category="General", enumeration="vertical,horizontal")]
-
-    public function get direction():String
-    {
-      return _direction;
-    }
-
-    public function set direction(value:String):void
-    {
-      if(value === _direction)
-        return;
-
-      _direction = value;
-
-      segmentsChanged = true;
-
-      invalidateSize();
-      invalidateDisplayList();
-    }
-
-    protected function isV():Boolean
-    {
-      return direction == BoxDirection.VERTICAL;
-    }
 
     private var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
     protected var segmentsChanged:Boolean = false;
@@ -201,19 +163,12 @@ package com.pt.components.controls.grid.itemRenderers
       }
     }
 
-    override protected function measure():void
-    {
-      super.measure();
-
-      if(segmentsChanged)
-        layout.measure();
-    }
-
     override protected function updateDisplayList(w:Number, h:Number):void
     {
       super.updateDisplayList(w, h);
 
-      layout.updateDisplayList(w, h);
+      if(segmentsChanged)
+        layout.updateDisplayList(w, h);
 
       segmentsChanged = false;
     }

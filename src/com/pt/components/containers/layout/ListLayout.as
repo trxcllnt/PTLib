@@ -6,7 +6,6 @@ package com.pt.components.containers.layout
     import flash.display.DisplayObject;
     import flash.geom.Point;
     
-    import mx.containers.BoxDirection;
     import mx.core.IUIComponent;
 
     public class ListLayout extends ComponentLayout
@@ -16,18 +15,13 @@ package com.pt.components.containers.layout
             return DataList(target);
         }
         
-        protected function isV():Boolean
-        {
-            return list.direction == BoxDirection.VERTICAL;
-        }
-        
         override public function updateDisplayList(w:Number, h:Number):void
         {
             var renderer:DisplayObject;
             var item:*;
             
             var aggregate:Number = 0;
-            var dimension:Dimension = list.getDimension(list.direction);
+            var dimension:Dimension = list.dimension;
             
             var i:int = 0;
             var n:int = target.numChildren;
@@ -45,27 +39,27 @@ package com.pt.components.containers.layout
                     aggregate += dimension.getPosition(item);
                 }
                 
-                childPos.x = isV() ? 0 : aggregate;
+                childPos.x = 0;
                 
-                childPos.y = isV() ? aggregate : 0;
+                childPos.y = aggregate;
                 
                 if(list.variableItemSize)
                 {
                     if(renderer is IUIComponent)
                     {
-                        childSize.x = isV() ? w : IUIComponent(renderer).getExplicitOrMeasuredWidth();
-                        childSize.y = isV() ? IUIComponent(renderer).getExplicitOrMeasuredHeight() : h;
+                        childSize.x = w;
+                        childSize.y = IUIComponent(renderer).getExplicitOrMeasuredHeight();
                     }
                     else
                     {
-                        childSize.x = isV() ? w : renderer.width;
-                        childSize.y = isV() ? renderer.height : h;
+                        childSize.x = w;
+                        childSize.y = renderer.height;
                     }
                 }
                 else
                 {
-                    childSize.x = isV() ? w : list.itemSize;
-                    childSize.y = isV() ? list.itemSize : h;
+                    childSize.x = w;
+                    childSize.y = list.itemSize;
                 }
                 
                 if(renderer is IUIComponent)
@@ -81,14 +75,12 @@ package com.pt.components.containers.layout
                     renderer.y = childPos.y;
                 }
                 
-                scrollProp = isV() ? 'horizontalScrollPosition' : 'verticalScrollPosition';
-                
-                if(scrollProp in renderer)
+                if('horizontalScrollPosition' in renderer)
                 {
-                    renderer[scrollProp] = isV() ? list.horizontalScrollPosition : list.verticalScrollPosition;
+                    renderer['horizontalScrollPosition'] = list.horizontalScrollPosition;
                 }
                 
-                aggregate += isV() ? childSize.y : childSize.x;
+                aggregate += childSize.y;
             }
         }
     }

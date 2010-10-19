@@ -7,43 +7,11 @@ package com.pt.components.controls.grid.itemRenderers.layout
     import flash.display.DisplayObject;
     import flash.geom.Point;
     
-    import mx.containers.BoxDirection;
     import mx.core.IUIComponent;
     
     public class DataGridSegmentRendererLayout extends ComponentLayout
     {
         public var segments:Vector.<DataGridSegment>;
-        
-        override public function measure():void
-        {
-            if(!segments || segments.length == 0)
-                return;
-            
-            var segment:DataGridSegment;
-            var n:int = Math.min(segments.length, target.numChildren);
-            var r:DisplayObject;
-            
-            for(var i:int = 0; i < n; i++)
-            {
-                segment = segments[i];
-                r = target.getChildAt(i);
-                
-                if(r is IUIComponent)
-                {
-                    if(isV())
-                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredWidth(), segment.relativeMeasuredSize);
-                    else
-                        segment.measuredSize = Math.max(IUIComponent(r).getExplicitOrMeasuredHeight(), segment.relativeMeasuredSize);
-                }
-                else
-                {
-                    if(isV())
-                        segment.measuredSize = Math.max(r.width, segment.relativeMeasuredSize);
-                    else
-                        segment.measuredSize = Math.max(r.height, segment.relativeMeasuredSize);
-                }
-            }
-        }
         
         override public function updateDisplayList(w:Number, h:Number):void
         {
@@ -59,75 +27,53 @@ package com.pt.components.controls.grid.itemRenderers.layout
             var r:DisplayObject;
             var segment:DataGridSegment;
             
-            var percentTotal:Number = 0;
             var usedSpace:Number = 0;
+            var numSegmentsWithLeftOverSpace:int = 0;
             
-            for(i = 0; i < n; ++i)
+            for(i = 0; i < n; i++)
             {
                 segment = segments[i];
-                if(isNaN(segment.percentSize))
+                if(isNaN(segment.size))
                 {
-                    segment.size = Math.min(Math.max(segment.size, segment.measuredSize, segment.relativeMinSize), segment.maxSize);
-                    usedSpace += segment.size;
+                  numSegmentsWithLeftOverSpace++;
                 }
                 else
                 {
-                    percentTotal += segment.percentSize;
+                  usedSpace += segment.size;
                 }
             }
             
-            var spacePerCent:Number = ((isV() ? w : h) - usedSpace) / Math.max(percentTotal, 100);
-            var sPer:Number = 0;
-            var aggregatePosition:Number = 0;
+            var defaultSize:Number = (w - usedSpace) / numSegmentsWithLeftOverSpace;
             
             for(i = 0; i < n; i++)
             {
                 segment = segments[i];
                 
-                pos = segment.position;
-                
                 if(i == 0)
                 {
-                    aggregatePosition = pos[isV() ? 'x' : 'y'];
+                  pos = segment.position.clone();
                 }
                 
-                if(isNaN(segment.percentSize))
+                segment.measuredSize = Math.min(Math.max(segment.size || defaultSize, segment.relativeMinSize), segment.maxSize);
+                
+                size.x = segment.measuredSize;
+                size.y = h;
+                usedSpace += size.x;
+                
+                if(isNaN(segment.size))
                 {
-                    segment.size = Math.min(Math.max(segment.size, segment.measuredSize, segment.relativeMinSize), segment.maxSize);
-                }
-                else
-                {
-                    sPer = segment.percentSize * spacePerCent;
-                    if(sPer > segment.maxSize)
-                    {
-                        usedSpace += segment.maxSize;
-                        percentTotal -= segment.percentSize;
-                        spacePerCent = ((isV() ? w : h) - usedSpace) / Math.max(percentTotal, 100);
-                    }
+                    numSegmentsWithLeftOverSpace--;
                     
-                    segment.size = segment.measuredSize = Math.min(Math.max(Math.round(sPer), segment.relativeMinSize), segment.maxSize);
+                    if(numSegmentsWithLeftOverSpace <= 0)
+                      numSegmentsWithLeftOverSpace = 1;
+                    
+                    if(segment.maxSize < defaultSize)
+                    {
+                        defaultSize = (w - usedSpace) / numSegmentsWithLeftOverSpace;
+                    }
                 }
-                
-                segment.size = Math.round(segment.size);
-                
-                segment.position[isV() ? 'x' : 'y'] = aggregatePosition;
-                
-                aggregatePosition += segment.size;
                 
                 r = target.getChildAt(i);
-                
-                pos = segment.position;
-                
-                if(isV())
-                {
-                    size.x = segment.size;
-                    size.y = h;
-                }
-                else
-                {
-                    size.x = w;
-                    size.y = segment.size;
-                }
                 
                 if(r is IUIComponent)
                 {
@@ -141,17 +87,11 @@ package com.pt.components.controls.grid.itemRenderers.layout
                     r.x = pos.x;
                     r.y = pos.y;
                 }
+                
+                segment.position.x = pos.x;
+                
+                pos.x += size.x;
             }
-        }
-        
-        private function isV():Boolean
-        {
-            return renderer.direction != BoxDirection.VERTICAL;
-        }
-        
-        private function get renderer():DataGridSegmentRendererBase
-        {
-            return target as DataGridSegmentRendererBase;
         }
     }
 }

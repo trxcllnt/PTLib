@@ -8,24 +8,14 @@ package com.pt.components.controls.grid
     import flash.display.Shape;
     import flash.geom.Point;
     
-    import mx.containers.BoxDirection;
     import mx.core.ClassFactory;
     
     public class DataGridList extends DataList
     {
         public function DataGridList()
         {
-            direction = BoxDirection.VERTICAL;
             variableItemSize = false;
             itemRenderer = new ClassFactory(DataGridListItemRenderer);
-        }
-        
-        protected function get segmentDirection():String
-        {
-            if(direction == BoxDirection.HORIZONTAL)
-                return BoxDirection.VERTICAL;
-            
-            return BoxDirection.HORIZONTAL;
         }
         
         protected var _segments:Vector.<DataGridSegment> = new Vector.<DataGridSegment>();
@@ -59,7 +49,6 @@ package com.pt.components.controls.grid
         {
             if(renderer is DataGridSegmentRendererBase)
             {
-                DataGridSegmentRendererBase(renderer).direction = segmentDirection;
                 DataGridSegmentRendererBase(renderer).segments = segments;
                 
                 if(renderer is DataGridListItemRenderer)
