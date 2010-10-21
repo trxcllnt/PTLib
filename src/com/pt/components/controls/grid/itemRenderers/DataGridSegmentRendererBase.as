@@ -36,7 +36,7 @@ package com.pt.components.controls.grid.itemRenderers
     {
       if(value === _segments)
         return;
-
+      
       _segments = value;
       segmentsChanged = segments && segments.length > 0;
 
@@ -99,9 +99,12 @@ package com.pt.components.controls.grid.itemRenderers
           renderer['segment'] = segment;
         }
 
-        if(segment is DataGridSegmentGroup && 'segments' in renderer)
+        if('segments' in renderer)
         {
-          renderer['segments'] = DataGridSegmentGroup(segment).children;
+          if(segment is DataGridSegmentGroup)
+            renderer['segments'] = DataGridSegmentGroup(segment).children;
+          else
+            renderer['segments'] = new <DataGridSegment>[];
         }
 
         commitRendererData(renderer, segment);

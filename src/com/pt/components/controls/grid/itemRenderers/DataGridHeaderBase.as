@@ -8,8 +8,8 @@ package com.pt.components.controls.grid.itemRenderers
     {
         override public function set segments(value:Vector.<DataGridSegment>):void
         {
-          if(value === segments)
-              return;
+          if(value === super.segments)
+            return;
           
           if(numChildren > 2)
               while(numChildren)

@@ -127,14 +127,14 @@ package com.pt.components.controls.grid
       if(scrollPosition.x === value)
         return;
 
-      newRendererInView.x = int((value < scrollPosition.x) ? value <= scrollDelta[1].x : value + width >= scrollDelta[1].y);
+      newRendererInView.x = int((value < scrollPosition.x) ? value < scrollDelta[1].x : value + width > scrollDelta[1].y);
 
       scrollPosition.x = value;
 
       if(newRendererInView.x)
       {
         lastRendererScrollPosition.x = value;
-//        segmentsChanged = true;
+        segmentsChanged = true;
         processSegments();
       }
 
